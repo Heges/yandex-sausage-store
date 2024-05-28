@@ -43,8 +43,8 @@ pipeline {
 			post {
 				success {
 					curl -X POST \
-						 -H 'Content-Type: application/json' \
-						 -d '{"chat_id": "1002138916913", "text": "Александр Гааг собрал приложение.", "disable_notification": true}' \
+						 -H "Content-Type: application/json" \
+						 -d "{"chat_id": "1002138916913", "text": "Александр Гааг собрал приложение.", "disable_notification": true}" \
 						 https://api.telegram.org/bot5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs/sendMessage
 				}
 			}
