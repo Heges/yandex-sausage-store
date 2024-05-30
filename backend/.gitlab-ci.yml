@@ -23,6 +23,6 @@ telegram-notification-backend:
        https://api.telegram.org/bot5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs/sendMessage
   needs:
     - build-backend-code-job
-  only:
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /send notification/
+  # only:
+    # variables:
+      # - $CI_COMMIT_MESSAGE =~ /send notification/
