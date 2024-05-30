@@ -4,9 +4,9 @@ stages:
 
 build-frontend-code-job:
   stage: build  
-  only:
-    changes:
-    - frontend/*/
+  # only:
+    # changes:
+    # - frontend/*/
   script:        
     - cd frontend
     - npm install
