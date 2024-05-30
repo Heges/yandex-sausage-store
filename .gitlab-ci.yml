@@ -1,7 +1,3 @@
 include:
   - 'backend/.gitlab-ci.yml'
   - 'frontend/.gitlab-ci.yml'
- 
- stages:
-  - build
-  - notify
