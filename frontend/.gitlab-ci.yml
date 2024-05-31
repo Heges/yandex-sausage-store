@@ -30,6 +30,6 @@ telegram-notification-frontend:
       - $CI_COMMIT_MESSAGE
       - $CI_PIPELINE_SOURCE
     # changes:
-      # - backend/*
+      # - frontend/*
   needs:
-    - job: build-backend-code-job
+    - job: build-frontend-code-job
