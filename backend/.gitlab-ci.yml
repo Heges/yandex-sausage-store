@@ -22,12 +22,7 @@ sonarqube-backend-sast:
     stage: test
     image: "maven:3.8-openjdk-16"
     script:
-        - mvn -f backend/pom.xml -X verify sonar:sonar -Dsonar.qualitygate.wait=true \
-        -Dsonar.projectKey=$SONAR_KEY_BACKEND \
-        -Dsonar.host.url=$SONARQUBE_URL \
-        -Dsonar.login=$SONAR_LOGIN \
-        # -Dsonar.projectName="$SONARQUBE_PROJECT_NAME_BACKEND" \
-        -Dsonar.sources=.
+        - mvn -f backend/pom.xml -X verify sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.sources=.
     # allow_failure: true
     cache:
         key: "${CI_COMMIT_REF_SLUG}-build-backend-code-job"
