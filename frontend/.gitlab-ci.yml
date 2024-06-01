@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
   - notify
 
 build-frontend-code-job:
@@ -14,6 +15,18 @@ build-frontend-code-job:
   artifacts:
     paths:
       - frontend/dist/frontend
+
+semgrep-sast:
+    stage: test
+    variables:
+        COMPILE: "false"
+        SAST_JAVA_VERSION: 11
+        MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository # не забудьте при сборке также указывать эту папку через аргумент -Dmaven.repo.local
+    cache:
+      paths:
+        - ${CI_PROJECT_DIR}/.m2/repository
+    needs:
+        - job: build-backend-code-job
 
 telegram-notification-frontend:
   stage: notify
