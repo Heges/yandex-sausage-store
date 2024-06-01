@@ -4,7 +4,7 @@ stages:
   - notify
 
 include:
-  - template: Security/SAST.gitlab-ci.yml 
+  - template: Security/SAST.gitlab-ci.yml
 
 build-backend-code-job:
   stage: build  
@@ -20,15 +20,15 @@ build-backend-code-job:
       
 semgrep-sast:
     stage: test
-  variables:
-    COMPILE: "false"
-    SAST_JAVA_VERSION: 11
-    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository # не забудьте при сборке также указывать эту папку через аргумент -Dmaven.repo.local
-cache:
-  paths:
-    - ${CI_PROJECT_DIR}/.m2/repository
-needs:
-    - job: build-backend-code-job
+    variables:
+        COMPILE: "false"
+        SAST_JAVA_VERSION: 11
+        MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository # не забудьте при сборке также указывать эту папку через аргумент -Dmaven.repo.local
+    cache:
+      paths:
+        - ${CI_PROJECT_DIR}/.m2/repository
+    needs:
+        - job: build-backend-code-job
 
 telegram-notification-backend:
   stage: notify
