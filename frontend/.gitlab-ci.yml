@@ -16,16 +16,16 @@ build-frontend-code-job:
     paths:
       - frontend/dist/frontend
 
-# semgrep-sast:
-    # stage: test
-    # script:
-        # - cd frontend
-        # - npm verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
-    # # cache:
-      # # paths:
-        # # - ${CI_PROJECT_DIR}/.m2/repository
-    # needs:
-        # - job: build-frontend-code-job
+semgrep-sast:
+    stage: test
+    script:
+        - npm sonar-scanner -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
+    cache:
+        key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
+        paths:
+          - ${CI_PROJECT_DIR}/frontend/.m2/repository
+    needs:
+        - job: build-frontend-code-job
 
 telegram-notification-frontend:
   stage: notify
