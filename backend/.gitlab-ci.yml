@@ -21,7 +21,11 @@ build-backend-code-job:
 semgrep-sast:
     stage: test
     script:
-        - mvn sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
+        # - mvn sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
+        mvn sonar:sonar \
+          -Dsonar.projectKey=30_ALEXANDERGAAG_BACKEND \
+          -Dsonar.host.url=https://sonarqube.praktikum-services.ru \
+          -Dsonar.login=b1b4a4434eef1e60174d135d5e3f77737382ee38
     cache:
         key: "${CI_COMMIT_REF_SLUG}-build-backend-code-job"
         paths:
