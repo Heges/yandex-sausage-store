@@ -1,10 +1,13 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+ 
+variables:
+  SAST_EXPERIMENTAL_STRING: "HELLO SAST"
+ 
 stages:
   - build
   - test
   - notify
-
-include:
-  - template: Security/SAST.gitlab-ci.yml
 
 build-backend-code-job:
   stage: build  
