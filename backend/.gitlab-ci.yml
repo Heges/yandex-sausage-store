@@ -18,14 +18,17 @@ build-backend-code-job:
     paths:
       - backend/target/sausage-store-0.0.1-SNAPSHOT.jar
       
-semgrep-sast:
+sonarqube-backend-sast:
     stage: test
+    image: "maven:3.8-openjdk-16"
     script:
-        # - mvn sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
-        mvn sonar:sonar \
-          -Dsonar.projectKey=30_ALEXANDERGAAG_BACKEND \
-          -Dsonar.host.url=https://sonarqube.praktikum-services.ru \
-          -Dsonar.login=b1b4a4434eef1e60174d135d5e3f77737382ee38
+        - mvn -f backend/pom.xml -X verify sonar:sonar -Dsonar.qualitygate.wait=true \
+        -Dsonar.projectKey=$SONAR_KEY_BACKEND \
+        -Dsonar.host.url=$SONARQUBE_URL \
+        -Dsonar.login=$SONAR_LOGIN \
+        # -Dsonar.projectName="$SONARQUBE_PROJECT_NAME_BACKEND" \
+        -Dsonar.sources=.
+    # allow_failure: true
     cache:
         key: "${CI_COMMIT_REF_SLUG}-build-backend-code-job"
         paths:
