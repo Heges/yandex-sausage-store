@@ -20,8 +20,6 @@ build-backend-code-job:
   artifacts:
     paths:
       - backend/target/sausage-store-0.0.1-SNAPSHOT.jar
-  rules:
-    when: manual
       
 semgrep-sast:
     stage: test
