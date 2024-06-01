@@ -23,9 +23,10 @@ semgrep-sast:
     script:
         - cd backend  
         - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
-    # cache:
-      # paths:
-        # - ${CI_PROJECT_DIR}/.m2/repository
+    cache:
+        key: "${CI_COMMIT_REF_SLUG}-build-backend-code-job"
+        paths:
+          - ${CI_PROJECT_DIR}/backend/.m2/repository
     needs:
         - job: build-backend-code-job
 
