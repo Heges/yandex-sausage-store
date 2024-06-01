@@ -32,6 +32,8 @@ semgrep-sast:
         - ${CI_PROJECT_DIR}/.m2/repository
     needs:
         - job: build-backend-code-job
+    rules:
+        when: manual
 
 telegram-notification-backend:
   stage: notify

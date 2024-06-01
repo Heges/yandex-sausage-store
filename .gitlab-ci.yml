@@ -1,5 +1,3 @@
 include:
   - local: 'backend/.gitlab-ci.yml'
   - local: 'frontend/.gitlab-ci.yml'
-rules:
-  - when: manual
