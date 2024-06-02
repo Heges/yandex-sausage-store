@@ -15,6 +15,8 @@ build-frontend-code-job:
   artifacts:
     paths:
       - frontend/dist/frontend
+  needs:
+    - job: build-backend-code-job
 
 sonarqube-frontend-sast:
     stage: test
@@ -23,14 +25,13 @@ sonarqube-frontend-sast:
         SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
         GIT_DEPTH: "0"
     script:
-        - docker run --rm -e sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
+        - sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN_FRONTEND
     cache:
         key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
         paths:
           - ${CI_PROJECT_DIR}/frontend/.m2/repository
     needs:
         - job: build-frontend-code-job
-        - job: build-backend-code-job
 
 telegram-notification-frontend:
   stage: notify
@@ -45,7 +46,5 @@ telegram-notification-frontend:
   only:
     variables:
       - $CI_COMMIT_MESSAGE
-    # changes:
-      # - frontend/*
   needs:
     - job: build-frontend-code-job
