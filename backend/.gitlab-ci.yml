@@ -1,9 +1,3 @@
-include:
-  - template: Security/SAST.gitlab-ci.yml
- 
-variables:
-  SAST_EXPERIMENTAL_STRING: "HELLO SAST"
- 
 stages:
   - build
   - test
@@ -11,9 +5,9 @@ stages:
 
 build-backend-code-job:
   stage: build  
-  # only:
-    # changes:
-    # - backend/*/
+  only:
+    changes:
+      - backend/**/*
   script:
     - cd backend
     - mvn package
@@ -21,15 +15,15 @@ build-backend-code-job:
     paths:
       - backend/target/sausage-store-0.0.1-SNAPSHOT.jar
       
-semgrep-sast:
+sonarqube-backend-sast:
     stage: test
-    variables:
-        COMPILE: "false"
-        SAST_JAVA_VERSION: 11
-        MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository # не забудьте при сборке также указывать эту папку через аргумент -Dmaven.repo.local
+    image: "maven:3.8-openjdk-16"
+    script:
+        - mvn -f backend/pom.xml -X verify sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.projectName="$SONAR_KEY_BACKEND"
     cache:
-      paths:
-        - ${CI_PROJECT_DIR}/.m2/repository
+        key: "${CI_COMMIT_REF_SLUG}-build-backend-code-job"
+        paths:
+          - ${CI_PROJECT_DIR}/backend/.m2/repository
     needs:
         - job: build-backend-code-job
 
@@ -46,8 +40,5 @@ telegram-notification-backend:
   only:
     variables:
       - $CI_COMMIT_MESSAGE
-      - $CI_PIPELINE_SOURCE
-    # changes:
-      # - backend/*
   needs:
     - job: build-backend-code-job
