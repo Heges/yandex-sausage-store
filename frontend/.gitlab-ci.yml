@@ -5,9 +5,9 @@ stages:
 
 build-frontend-code-job:
   stage: build  
-  # only:
-    # changes:
-    # - frontend/*/
+  only:
+    changes:
+      - frontend/**/*
   script:        
     - cd frontend
     - npm install
@@ -16,16 +16,17 @@ build-frontend-code-job:
     paths:
       - frontend/dist/frontend
 
-# semgrep-sast:
-    # stage: test
-    # script:
-        # - npm sonar-scanner -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
-    # cache:
-        # key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
-        # paths:
-          # - ${CI_PROJECT_DIR}/frontend/.m2/repository
-    # needs:
-        # - job: build-frontend-code-job
+sonarqube-frontend-sast:
+    stage: test
+    image: sonarqube/sonar-scanar-cli:latest
+    script:
+        - sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
+    cache:
+        key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
+        paths:
+          - ${CI_PROJECT_DIR}/frontend/.m2/repository
+    needs:
+        - job: build-frontend-code-job
 
 telegram-notification-frontend:
   stage: notify
