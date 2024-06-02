@@ -25,7 +25,8 @@ sonarqube-frontend-sast:
         SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
         GIT_DEPTH: "0"
     script:
-        - sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN_FRONTEND
+        #- sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN_FRONTEND
+        - sonar-scanner -Dsonar.projectKey=30_ALEXANDERGAAG_FRONTEND -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.praktikum-services.ru -Dsonar.login=d083fe1adadc702d53253becb159fa65f5653a3f
     cache:
         key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
         paths:
