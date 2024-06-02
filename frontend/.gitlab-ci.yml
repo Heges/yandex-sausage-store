@@ -21,16 +21,16 @@ build-frontend-code-job:
 sonarqube-frontend-sast:
     stage: test
     image: sonarsource/sonar-scanar-cli:latest
-    variables:
-        SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
-        GIT_DEPTH: "0"
+    # variables:
+        # SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
+        # GIT_DEPTH: "0"
     script:
         - sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN_FRONTEND
         #- sonar-scanner -Dsonar.projectKey=30_ALEXANDERGAAG_FRONTEND -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.praktikum-services.ru -Dsonar.login=d083fe1adadc702d53253becb159fa65f5653a3f
-    cache:
-        key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
-        paths:
-          - ${CI_PROJECT_DIR}/frontend/.m2/repository
+    # cache:
+        # key: "${CI_COMMIT_REF_SLUG}-build-frontend-code-job"
+        # paths:
+          # - ${CI_PROJECT_DIR}/frontend/.m2/repository
     needs:
         - job: build-frontend-code-job
 
