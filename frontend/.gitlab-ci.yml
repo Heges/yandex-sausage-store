@@ -20,7 +20,7 @@ build-frontend-code-job:
 
 sonarqube-frontend-sast:
     stage: test
-    image: sonarqube/sonar-scanar-cli:latest
+    image: sonarsource/sonar-scanar-cli:latest
     variables:
         SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
         GIT_DEPTH: "0"
