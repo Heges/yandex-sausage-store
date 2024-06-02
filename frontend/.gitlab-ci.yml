@@ -19,7 +19,7 @@ build-frontend-code-job:
 sonarqube-frontend-sast:
     stage: test
     image:
-        name: sonarqube/sonar-scanar-cli:latest
+        name: "sonarqube/sonar-scanar-cli:latest"
         entrypoint: [""]
     variables:
         SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
@@ -32,6 +32,7 @@ sonarqube-frontend-sast:
           - ${CI_PROJECT_DIR}/frontend/.m2/repository
     needs:
         - job: build-frontend-code-job
+        - job: build-backend-code-job
 
 telegram-notification-frontend:
   stage: notify
