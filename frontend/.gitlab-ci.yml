@@ -18,7 +18,12 @@ build-frontend-code-job:
 
 sonarqube-frontend-sast:
     stage: test
-    image: sonarqube/sonar-scanar-cli:latest
+    image:
+        name: sonarqube/sonar-scanar-cli:latest
+        entrypoint: [""]
+    variables:
+        SONAR_USER_HOME: "{CI-POROJECT-DIR}/.SONAR"
+        GIT_DEPTH: "0"
     script:
         - sonar-scanner -X -Dsonar.projectKey=$SONAR_KEY_FRONTEND -Dsonar.sources=. -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN
     cache:
