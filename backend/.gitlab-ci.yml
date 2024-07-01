@@ -19,9 +19,7 @@ build-backend-code-job:
     # - backend/*/
   script:
     - cd backend
-    - >
-   mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository
-   -Dversion.application=${VERSION}
+    - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}
   artifacts:
     paths:
       - backend/target/sausage-store-${VERSION}.jar
