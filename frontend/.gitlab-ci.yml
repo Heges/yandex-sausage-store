@@ -42,7 +42,7 @@ telegram-notification-frontend:
 
 upload-frontend-release:
   stage: release
-  # needs:
+  needs:
     # - sonarqube-frontend-sast
     # - gitlab-sast
     - job: build-frontend-code-job
