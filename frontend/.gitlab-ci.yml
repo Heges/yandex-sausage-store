@@ -2,9 +2,13 @@ stages:
   - build
   - test
   - notify
+  - release
 
 build-frontend-code-job:
-  stage: build  
+  stage: build
+  cache:
+    paths:
+        - .npm/ # для хранения зависимостей сборки фронтенда
   # only:
     # changes:
     # - frontend/*/
@@ -34,3 +38,15 @@ telegram-notification-frontend:
       # - frontend/*
   needs:
     - job: build-frontend-code-job
+
+upload-frontend-release:
+  stage: release
+  # only:
+    # changes:
+    # - frontend/**/*
+  needs:
+    - build-frontend-code-job
+  script:
+    - cd frontend/dist
+    - tar czvf sausage-store-${VERSION}.tar.gz frontend
+    - curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz 
