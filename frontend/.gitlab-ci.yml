@@ -45,7 +45,7 @@ upload-frontend-release:
   # needs:
     # - sonarqube-frontend-sast
     # - gitlab-sast
-    - build-frontend-code-job
+    - job: build-frontend-code-job
   script:
     - |
       cd frontend/dist
