@@ -8,7 +8,8 @@ build-frontend-code-job:
   stage: build
   cache:
     paths:
-        - .npm/ # для хранения зависимостей сборки фронтенда
+        # - .npm/ # для хранения зависимостей сборки фронтенда
+        - frontend/dist/
   # only:
     # changes:
     # - frontend/*/
