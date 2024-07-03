@@ -1,3 +1,8 @@
-include:
-  - local: 'backend/.gitlab-ci.yml'
+# include:
+  # - local: 'backend/.gitlab-ci.yml'
   # - local: 'frontend/.gitlab-ci.yml'
+trigger_job:
+  trigger:
+    include:
+      - local: 'frontend/.gitlab-ci.yml'
+      - local: 'backend/.gitlab-ci.yml'
