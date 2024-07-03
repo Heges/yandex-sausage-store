@@ -49,17 +49,19 @@ upload-frontend-release:
     # - sonarqube-frontend-sast
     # - gitlab-sast
     - job: build-frontend-code-job
-  script:
-    - cd frontend/dist
-    - tar czvf sausage-store-${VERSION}.tar.gz frontend
-    - curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
   # script:
-    # - |
-      # cd frontend/dist
-      # tar czvf sausage-store-$VERSION.tar.gz frontend
-      # echo "Загрузка файла в Nexus через curl:"
-      # echo "curl -u \"$NEXUS_REPO_USER:$NEXUS_REPO_PASS\" --upload-file \"sausage-store-$VERSION.tar.gz\" \"$NEXUS_REPO_URL/repository/$NEXUS_REPO_FRONTEND_NAME/$VERSION/sausage-store-$VERSION.tar.gz\" -X PUT"
-      # RESPONSE=$(curl -v -u "$NEXUS_REPO_USER:$NEXUS_REPO_PASS" --upload-file "sausage-store-$VERSION.tar.gz" "$NEXUS_REPO_URL/repository/$NEXUS_REPO_FRONTEND_NAME/$VERSION/sausage-store-$VERSION.tar.gz" -X PUT 2>&1)
-      # echo "Ответ от Nexus:"
-      # echo "$RESPONSE"
+    # - cd frontend/dist
+    # - tar czvf sausage-store-${VERSION}.tar.gz frontend
+    # - curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
+  script:
+    - |
+      cd frontend/dist
+      ls -l
+      tar czvf sausage-store-$VERSION.tar.gz frontend
+      ls -l
+      echo "Загрузка файла в Nexus через curl:"
+      echo "curl -u \"$NEXUS_REPO_USER:$NEXUS_REPO_PASS\" --upload-file \"sausage-store-$VERSION.tar.gz\" \"$NEXUS_REPO_URL/repository/$NEXUS_REPO_FRONTEND_NAME/$VERSION/sausage-store-$VERSION.tar.gz\" -X PUT"
+      RESPONSE=$(curl -v -u "$NEXUS_REPO_USER:$NEXUS_REPO_PASS" --upload-file "sausage-store-$VERSION.tar.gz" "$NEXUS_REPO_URL/repository/$NEXUS_REPO_FRONTEND_NAME/$VERSION/sausage-store-$VERSION.tar.gz" -X PUT 2>&1)
+      echo "Ответ от Nexus:"
+      echo "$RESPONSE"
  
