@@ -71,4 +71,9 @@ upload-backend-release:
   script:
     - cd backend
     - mvn deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -s settings.xml -Dversion.application=${VERSION}
-    
+
+trigger_job:
+  trigger:
+    include:
+      - local: 'frontend/.gitlab-ci.yml'
+      # - local: 'backend/.gitlab-ci.yml'    
