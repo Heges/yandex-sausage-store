@@ -54,4 +54,39 @@ telegram-notification-backend:
     # changes:
       # - backend/*
   needs:
-    - job: build-backend-code-job
+    cache:
+  paths:
+    - ${CI_PROJECT_DIR}/.m2/repository
+
+variables:
+   VERSION: 1.0.${CI_PIPELINE_ID}
+   MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+   JAVA_OPTS: -XX:MaxRAMPercentage=90 # для того, чтобы Maven не съел всю свободную оперативку
+
+stages:
+   - build
+   - release
+
+build:
+   stage: build
+   script:
+      - cd backend
+      - >
+         mvn package
+         -Dversion.application=${VERSION}
+         -Dmaven.repo.local=${MAVEN_REPO_PATH}
+   rules: # rules и only в данных случаях взаимозаменяемы
+      - changes:
+           - backend/**/*
+
+release:
+   stage: release
+   script:
+      - cd backend
+      - >
+         mvn deploy -DskipTests -s settings.xml
+         -Dversion.application=${VERSION}
+         -Dmaven.repo.local=${MAVEN_REPO_PATH}
+   rules:
+      - changes:
+           - backend/**/*
