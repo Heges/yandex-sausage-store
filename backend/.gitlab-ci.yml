@@ -55,7 +55,7 @@ sonarqube-backend-sast:
 gitlab-sast:
   stage: test
   needs:
-    - build-backend
+    - build-backend-code-job
   trigger:
     include:
       - template: Security/SAST.gitlab-ci.yml
