@@ -41,7 +41,7 @@ sonarqube-backend-sast:
   stage: test
   image: "maven:3.8-openjdk-16"
   needs:
-    build-backend-code-job
+    - build-backend-code-job
   script:
     - cd backend
     - >
