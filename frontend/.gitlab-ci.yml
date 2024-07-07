@@ -1,7 +1,19 @@
 stages:
   - build
   - test
+  - release
+  - deploy
   - notify
+
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  TEXT: ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_BACKEND_NAME}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar
+  JAVA_OPTS: -XX:MaxRAMPercentage=90
+
+cache:
+  paths:
+    - ${CI_PROJECT_DIR}/.m2/repository
 
 build-frontend-code-job:
   stage: build  
