@@ -5,8 +5,8 @@ stages:
   - build
   - test
   - release
-  - notify
   - deploy
+  - notify
 
 cache:
   paths:
