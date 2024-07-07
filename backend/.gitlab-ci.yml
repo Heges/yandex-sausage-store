@@ -46,9 +46,9 @@ sonarqube-backend-sast:
     - cd backend
     - >
       mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
-      -Dsonar.projectKey=${SONAR_PROJECT_KEY_BACK}
+      -Dsonar.projectKey=${SONAR_KEY_BACKEND}
       -Dsonar.host.url=${SONARQUBE_URL}
-      -Dsonar.login=${SONAR_LOGIN_BACK}
+      -Dsonar.login=${SONAR_LOGIN}
 
 gitlab-sast:
   stage: test
