@@ -61,8 +61,6 @@ upload-frontend-release:
       
 deploy-frontend:
   stage: deploy
-  needs:
-    - upload-frontend-release
   before_script:
       - echo "Проверяем агент"
       - |
@@ -89,6 +87,8 @@ deploy-frontend:
     auto_stop_in: 1h
   rules:
     - when: manual
+  needs:
+      - job: upload-frontend-release
 
 telegram-notification-frontend:
   stage: notify
