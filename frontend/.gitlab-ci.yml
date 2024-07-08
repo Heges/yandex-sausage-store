@@ -52,6 +52,8 @@ upload-frontend-release:
     - sonarqube-frontend-sast
     - gitlab-sast
   script:
+    - pwd
+    - ls -l
     - cd frontend/dist
     - tar czvf sausage-store-${VERSION}.tar.gz frontend
     - curl -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
@@ -92,7 +94,7 @@ telegram-notification-frontend:
   script:
     - |
       if [[ "$CI_COMMIT_MESSAGE" == *"send notification"* ]]; then
-        message="Александр Гааг собрал Frontend \nАртефакт доступен по [ссылке](${NEXUS_REPO_URL}/repository/${NEXUS_REPO_BACKEND_NAME}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar"
+        message="Александр Гааг собрал Frontend \nАртефакт доступен по [ссылке](${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.jar"
         curl -X POST -H 'Content-type: application/json' \
           --data "{\"chat_id\": \"-1002138916913\", \"text\": \"$message\", \"parse_mode\": \"markdown\"}" \
           https://api.telegram.org/bot5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs/sendMessage
