@@ -1,0 +1,13 @@
+[Unit]
+Description=Backend for Sausage-store
+After=network.target
+
+[Service]
+User=backend
+Group=backend
+WorkingDirectory=/var/sausage-store/
+Environment=LOG_PATH=/var/sausage-store/
+Environment=REPORT_PATH=/var/sausage-store/reports/
+ExecStart=/usr/lib/jvm/java-16-openjdk-amd64/bin/java -jar /var/student/sausage-store.jar
+[Install]
+WantedBy=multi-user.target

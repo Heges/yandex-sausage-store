@@ -1,48 +1,110 @@
-include:
-  - template: Security/SAST.gitlab-ci.yml
+# include:
+  # - template: Security/SAST.gitlab-ci.yml
  
 variables:
-  SAST_EXPERIMENTAL_STRING: "HELLO SAST"
+  # SAST_EXPERIMENTAL_STRING: "HELLO SAST"
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  JAVA_OPTS: -XX:MaxRAMPercentage=90
  
 stages:
   - build
   - test
+  - release
+  - deploy
   - notify
 
+cache:
+  paths:
+    - ${CI_PROJECT_DIR}/.m2/repository
+
 build-backend-code-job:
-  variables:
-    VERSION: 1.0.${CI_PIPELINE_ID}
-    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  # variables:
+    # VERSION: 1.0.${CI_PIPELINE_ID}
+    # MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
   stage: build  
   # only:
     # changes:
     # - backend/*/
   script:
     - cd backend
-    - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}
-  artifacts:
-    paths:
-      - backend/target/sausage-store-${VERSION}.jar
-      - ${CI_PROJECT_DIR}/.m2/
-      
-semgrep-sast:
-    stage: test
-    variables:
-        COMPILE: "false"
-        SAST_JAVA_VERSION: 11
-        MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository # не забудьте при сборке также указывать эту папку через аргумент -Dmaven.repo.local
-    cache:
-      paths:
-        - ${CI_PROJECT_DIR}/.m2/repository
+    - mkdir -p ${MAVEN_REPO_PATH}
+    - >
+      mvn package -Dmaven.repo.local=${MAVEN_REPO_PATH}
+      -Dversion.application=${VERSION}
+  # artifacts:
+    # paths:
+      # - backend/target/sausage-store-${VERSION}.jar
+      # - ${CI_PROJECT_DIR}/.m2/
+
+sonarqube-backend-sast:
+  stage: test
+  image: "maven:3.8-openjdk-16"
+  needs:
+    - build-backend-code-job
+  script:
+    - cd backend
+    - >
+      mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
+      -Dsonar.projectKey=${SONAR_KEY_BACKEND}
+      -Dsonar.host.url=${SONARQUBE_URL}
+      -Dsonar.login=${SONAR_LOGIN}
+
+gitlab-sast:
+  stage: test
+  needs:
+    - build-backend-code-job
+  trigger:
+    include:
+      - template: Security/SAST.gitlab-ci.yml
+
+upload-backend:
+  stage: release
+  needs:
+    - sonarqube-backend-sast
+    - gitlab-sast
+  script:
+    - cd backend
+    - mvn deploy -DskipTests -Dmaven.repo.local=${MAVEN_REPO_PATH} -s settings.xml -Dversion.application=${VERSION}
+
+deploy-backend:
+    stage: deploy
+    before_script:
+      - echo "Проверяем агент"
+      - |
+        if [ ! -f /usr/bin/ssh-agent ]; then
+          apt-get update -y
+          apt-get install openssh-client -y
+        fi
+        eval $(ssh-agent -s)
+        echo "Добавляем ключ"
+        echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
+        echo "Выдаём права и настраиваем SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+        ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+    script:
+      - scp ./backend/backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/backend.service
+      - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_BACKEND_NAME=${NEXUS_REPO_BACKEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./backend/deploy.sh
+    environment:
+      name: review/$CI_COMMIT_REF_NAME
+      url: https://${DEV_HOST}
+      auto_stop_in: 1h
+    rules: 
+      - when: manual
     needs:
-        - job: build-backend-code-job
+      - job: upload-backend
+    
 
 telegram-notification-backend:
   stage: notify
   script:
     - |
       if [[ "$CI_COMMIT_MESSAGE" == *"send notification"* ]]; then
-        message="Александр Гааг собрал Backend \nАртефакт доступен по [ссылке]($CI_PROJECT_URL/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/download?job=build-backend-code-job)"
+        message="Александр Гааг собрал Backend \nАртефакт доступен по [ссылке](${NEXUS_REPO_URL}/repository/${NEXUS_REPO_BACKEND_NAME}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar)"
         curl -X POST -H 'Content-type: application/json' \
         --data "{\"chat_id\": \"-1002138916913\", \"text\": \"$message\", \"parse_mode\": \"markdown\"}" \
         https://api.telegram.org/bot5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs/sendMessage
