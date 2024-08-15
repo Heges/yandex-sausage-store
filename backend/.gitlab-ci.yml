@@ -93,7 +93,7 @@ deploy-backend:
         ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
     script:
-      - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/sausage-store-back.service > ./backend/backend.service.temp
+      - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
       - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
       - sed -i "s/\${PSQL_DBNAME}/$PSQL_DBNAME/" ./backend/backend.service.temp
       - sed -i "s/\${PSQL_ADMIN}/$PSQL_ADMIN/" ./backend/backend.service.temp
