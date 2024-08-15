@@ -14,7 +14,7 @@ Environment=SPRING_DATASOURCE_PASSWORD="${PSQL_PASSWORD}"
 Environment=LOG_PATH=/var/sausage-store/
 Environment=REPORT_PATH=/var/sausage-store/reports/
 ExecStart=/usr/lib/jvm/java-16-openjdk-amd64/bin/java \
--Dserver.basePath='/opt/sausage-store/bin/' \
+-Dserver.basePath='/var/student/' \
 -Dserver.addr='127.0.0.1' \
 -Dserver.port='8080' \
 -Dserver.hostName='Sausage-store' \

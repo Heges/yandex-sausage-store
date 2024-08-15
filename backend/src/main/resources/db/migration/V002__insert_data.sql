@@ -14,4 +14,4 @@ SELECT
     DATE(NOW() - (RANDOM() * (NOW() + '90 days' - NOW())))
 FROM generate_series(1, 10000000) s(i);
 
-INSERT INTO order_product (quantity, order_id, product_id)
+INSERT INTO order_product (quantity, order_id, product_id);
