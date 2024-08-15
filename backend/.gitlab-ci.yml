@@ -22,9 +22,7 @@ build-backend-code-job:
   # variables:
     # VERSION: 1.0.${CI_PIPELINE_ID}
     # MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
-  stage: build
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"  
+  stage: build  
   # only:
     # changes:
     # - backend/*/
@@ -41,8 +39,6 @@ build-backend-code-job:
 
 sonarqube-backend-sast:
   stage: test
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"
   image: "maven:3.8-openjdk-16"
   needs:
     - build-backend-code-job
@@ -56,8 +52,6 @@ sonarqube-backend-sast:
 
 gitlab-sast:
   stage: test
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"
   needs:
     - build-backend-code-job
   trigger:
