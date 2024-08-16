@@ -6,8 +6,19 @@ After=network.target
 User=backend
 Group=backend
 WorkingDirectory=/var/sausage-store/
+
+Environment=SPRING_DATASOURCE_URL="jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}?ssl=true"
+Environment=SPRING_DATASOURCE_USERNAME="${PSQL_ADMIN}"
+Environment=SPRING_DATASOURCE_PASSWORD="${PSQL_PASSWORD}"
+
 Environment=LOG_PATH=/var/sausage-store/
 Environment=REPORT_PATH=/var/sausage-store/reports/
-ExecStart=/usr/lib/jvm/java-16-openjdk-amd64/bin/java -jar /var/student/sausage-store.jar
+ExecStart=/usr/lib/jvm/java-16-openjdk-amd64/bin/java \
+-Dserver.basePath='/var/student/' \
+-Dserver.addr='127.0.0.1' \
+-Dserver.port='8080' \
+-Dserver.hostName='Sausage-store' \
+-jar /var/student/sausage-store.jar
+SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target

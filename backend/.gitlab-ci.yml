@@ -93,7 +93,12 @@ deploy-backend:
         ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
     script:
-      - scp ./backend/backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/backend.service
+      - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
+      - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
+      - sed -i "s/\${PSQL_DBNAME}/$PSQL_DBNAME/" ./backend/backend.service.temp
+      - sed -i "s/\${PSQL_ADMIN}/$PSQL_ADMIN/" ./backend/backend.service.temp
+      - sed -i "s/\${PSQL_PASSWORD}/$PSQL_PASSWORD/" ./backend/backend.service.temp
+      - scp ./backend/backend.service.temp ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/backend.service
       - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_BACKEND_NAME=${NEXUS_REPO_BACKEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./backend/deploy.sh
     environment:
       name: review/$CI_COMMIT_REF_NAME
