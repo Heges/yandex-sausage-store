@@ -11,6 +11,13 @@ Environment=SPRING_DATASOURCE_URL="jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/$
 Environment=SPRING_DATASOURCE_USERNAME="${PSQL_ADMIN}"
 Environment=SPRING_DATASOURCE_PASSWORD="${PSQL_PASSWORD}"
 
+Environment=MONGO_USER="${MONGO_USER}"
+Environment=MONGO_PASSWORD="${MONGO_PASSWORD}"
+Environment=MONGO_HOST="rc1a-3nb7p7jsmbup6crt.mdb.yandexcloud.net"
+Environment=MONGO_DATABASE="${MONGO_DATABASE}"
+
+Environment=SPRING_DATA_MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@rc1a-3nb7p7jsmbup6crt.mdb.yandexcloud.net:27018/${MONGO_DATABASE}?tls=true"
+
 Environment=LOG_PATH=/var/sausage-store/
 Environment=REPORT_PATH=/var/sausage-store/reports/
 ExecStart=/usr/lib/jvm/java-16-openjdk-amd64/bin/java \
