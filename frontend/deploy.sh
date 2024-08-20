@@ -6,7 +6,7 @@ sudo rm -rf /home/student/sausage-store-front.tar.gz
 
 curl -u ${NEXUS_REPO_USER}:${NEXUS_REPO_PASS} -o sausage-store-front.tar.gz ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
 sudo rm -rf /home/student/frontend-build/frontend
-tar -zxf ./frontend-build/sausage-store-front.tar.gz ||true
+tar -zxf ./sausage-store-front.tar.gz ||true
 sudo chown -R www-data:www-data ./frontend-build/frontend
 sudo mkdir -p /var/www-data/frontend
 sudo cp -rf ./frontend-build/frontend/* /var/www-data/frontend
