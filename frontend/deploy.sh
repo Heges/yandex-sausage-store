@@ -1,8 +1,8 @@
 #! /bin/bash
 set -xe
-cd /home/student/frontend-build
-sudo cp -rf frontend-build/sausage.conf /etc/nginx/conf.d/sausage.conf
-sudo rm -rf /home/student/frontend-build/sausage-store-front.tar.gz
+
+sudo cp -rf sausage.conf /etc/nginx/conf.d/sausage.conf
+sudo rm -rf /home/student/sausage-store-front.tar.gz
 
 curl -u ${NEXUS_REPO_USER}:${NEXUS_REPO_PASS} -o sausage-store-front.tar.gz ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
 sudo rm -rf /home/student/frontend-build/frontend
