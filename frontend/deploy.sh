@@ -14,3 +14,6 @@ sudo cp -rf ./frontend/* /var/www-data/frontend
 sudo systemctl daemon-reload
 sudo systemctl enable nginx
 sudo systemctl restart nginx
+
+docker build -t sausage-store-fronted:${VERSION}
+docker run --rm --name sausage-store-fronted -p 9999:8080 -v ~/frontend-build/Dockerfile:/caddy sausage-store-fronted:${VERSION}
