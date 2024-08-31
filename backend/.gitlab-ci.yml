@@ -84,6 +84,7 @@ upload-backend:
 
 deploy-backend:
     stage: deploy
+    image: alpine:3.18
     before_script:
       - echo "Проверяем агент"
       - |
