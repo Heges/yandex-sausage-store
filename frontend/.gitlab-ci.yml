@@ -17,10 +17,21 @@ build-frontend-code-job:
   # only:
   #   changes:
   #   - frontend/*/
-  script:        
-    - cd frontend
-    - npm install
-    - npm run build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "start build frontend"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/frontend"
+      --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-frontend:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+  # script:
+    # - cd frontend
+    # - npm install
+    # - npm run build
   # artifacts:
   #   paths:
   #   - frontend/dist/frontend
@@ -51,12 +62,14 @@ upload-frontend-release:
   needs:
     - sonarqube-frontend-sast
     - gitlab-sast
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - pwd
-    - ls -l
-    - cd frontend/dist
-    - tar czvf sausage-store-${VERSION}.tar.gz frontend
-    - curl -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
+    - crane tag $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA $VERSION
       
 deploy-frontend:
   stage: deploy
@@ -69,6 +82,7 @@ deploy-frontend:
         apt-get update -y
         apt-get install openssh-client -y
       fi
+      apk add openssh-client bash
       eval $(ssh-agent -s)
       echo "Добавляем ключ"
       echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
@@ -79,9 +93,12 @@ deploy-frontend:
       chmod 644 ~/.ssh/known_hosts
       ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
       chmod 644 ~/.ssh/known_hosts
+      envsubst < ./frontend/deploy.sh|ssh ${DEV_USER}@${DEV_HOST}
   script:
     - scp ./frontend/nginx.conf ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage.conf
     - scp ./frontend/Dockerfile ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/frontend-build/Dockerfile
+    - ssh ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p /tmp/${CI_PROJECT_DIR}/frontend/"
+    - scp ./frontend/default.conf ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/${CI_PROJECT_DIR}/frontend/default.conf
     - scp ./frontend/default.conf ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/frontend-build/default.conf
     - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_FRONTEND_NAME=${NEXUS_REPO_FRONTEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./frontend/deploy.sh
   environment:

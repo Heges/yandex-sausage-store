@@ -28,16 +28,18 @@ build-backend-code-job:
   # only:
     # changes:
     # - backend/*/
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  # переменные CI_REGISTRY_USER, CI_REGISTRY_PASSWORD, CI_REGISTRY генерятся Гитлабом, их задавать не надо
   script:
-    - cd backend
-    - mkdir -p ${MAVEN_REPO_PATH}
-    - >
-      mvn package -Dmaven.repo.local=${MAVEN_REPO_PATH}
-      -Dversion.application=${VERSION}
-  # artifacts:
-    # paths:
-      # - backend/target/sausage-store-${VERSION}.jar
-      # - ${CI_PROJECT_DIR}/.m2/
+    - echo "start build backend"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend"
+      --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-backend:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
 
 sonarqube-backend-sast:
   stage: test
@@ -66,12 +68,19 @@ gitlab-sast:
 
 upload-backend:
   stage: release
+  variables:
+    GIT_STRATEGY: none
   needs:
     - sonarqube-backend-sast
     - gitlab-sast
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd backend
-    - mvn deploy -DskipTests -Dmaven.repo.local=${MAVEN_REPO_PATH} -s settings.xml -Dversion.application=${VERSION}
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION
 
 deploy-backend:
     stage: deploy
@@ -82,6 +91,7 @@ deploy-backend:
           apt-get update -y
           apt-get install openssh-client -y
         fi
+        apk add openssh-client bash
         eval $(ssh-agent -s)
         echo "Добавляем ключ"
         echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
@@ -92,6 +102,8 @@ deploy-backend:
         chmod 644 ~/.ssh/known_hosts
         ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
+        # подставим переменные в скрипт deploy.sh и выполним его на целевом хосте, где развернем сосисочный бэкенд    
+        envsubst < ./backend/deploy.sh|ssh ${DEV_USER}@${DEV_HOST}
     script:
       - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
       - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
