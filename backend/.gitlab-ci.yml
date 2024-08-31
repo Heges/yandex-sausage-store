@@ -88,10 +88,6 @@ deploy-backend:
     before_script:
       - echo "Проверяем агент"
       - |
-        if [ ! -f /usr/bin/ssh-agent ]; then
-          apt-get update -y
-          apt-get install openssh-client -y
-        fi
         apk add openssh-client bash
         eval $(ssh-agent -s)
         echo "Добавляем ключ"
