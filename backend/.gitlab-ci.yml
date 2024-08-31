@@ -90,7 +90,7 @@ deploy-backend:
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - envsubst < ./backend/deploy.sh | ssh ${DEV_USER}@${DEV_HOST}
+    - envsubst < ./backend/deploy.sh | ssh -o StrictHostKeyChecking=no ${DEV_USER}@${DEV_HOST}
   rules: 
     - when: manual
     
