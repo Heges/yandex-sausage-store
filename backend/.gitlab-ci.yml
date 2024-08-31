@@ -103,7 +103,7 @@ deploy-backend:
         ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
         chmod 644 ~/.ssh/known_hosts
         # подставим переменные в скрипт deploy.sh и выполним его на целевом хосте, где развернем сосисочный бэкенд    
-        envsubst < ./backend/deploy.sh|ssh ${DEV_USER}@${DEV_HOST}
+        # envsubst < ./backend/deploy.sh|ssh ${DEV_USER}@${DEV_HOST}
     script:
       - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
       - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
