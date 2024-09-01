@@ -17,7 +17,7 @@ COPY --from=builder /usr/src/app/YandexInternalRootCA.crt .
 RUN mkdir -p /home/backend/.postgresql \
     && chmod 755 /home/backend/.postgresql 
 
-COPY --from=builder root.crt /home/backend/.postgresql/root.crt \
+COPY --from=builder /usr/src/app/root.crt /home/backend/.postgresql/root.crt \
     && chmod 644 /home/backend/.postgresql/root.crt \
     && chown backend:backend /home/backend/.postgresql/root.crt
 
