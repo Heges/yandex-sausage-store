@@ -18,6 +18,12 @@ RUN keytool -importcert -file YandexInternalRootCA.crt \
     && adduser -S -s /bin/false -G backend backend -D -H
 COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
+	 
+RUN mkdir -p /home/backend/.postgresql && \
+wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" \
+    --output-document /home/backend/.postgresql/root.crt && \
+chmod 0600 /home/backend/.postgresql/root.crt && \
+chown -R backend:backend /home/backend/.postgresql
 EXPOSE 8080
 USER backend
 ENTRYPOINT ["java", "-jar", "-Dmyserver.bindPort=8080", "/app/sausage-store.jar"]
