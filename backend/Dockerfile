@@ -21,7 +21,7 @@ RUN mkdir -p /home/backend/.postgresql \
 
 COPY --from=builder /usr/src/app/root.crt /home/backend/.postgresql/root.crt 
 RUN chmod 644 /home/backend/.postgresql/root.crt \
-    && chown -R backend:backend /home/backend/.postgresql
+    && chown -R backend:backend /home/backend/
 
 RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \
@@ -31,5 +31,5 @@ COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
 EXPOSE 8080
 USER backend
-# ENTRYPOINT ["java", "-jar", "-Dmyserver.bindPort=8080", "/app/sausage-store.jar"]
-CMD ["tail", "-f", "/dev/null"]
+ENTRYPOINT ["java", "-jar", "-Dmyserver.bindPort=8080", "/app/sausage-store.jar"]
+# CMD ["tail", "-f", "/dev/null"]
