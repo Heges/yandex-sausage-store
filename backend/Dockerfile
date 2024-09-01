@@ -14,6 +14,8 @@ WORKDIR /app
 COPY --from=builder /usr/src/app/YandexInternalRootCA.crt .
 
 # Создание каталога для сертификата и копирование его туда
+RUN  addgroup --system backend \
+    && adduser -S -s /bin/false -G backend backend -D -H
 RUN mkdir -p /home/backend/.postgresql \
     && chmod 755 /home/backend/.postgresql 
 
@@ -23,9 +25,7 @@ RUN chmod 644 /home/backend/.postgresql/root.crt \
 
 RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \
-    && rm -rf YandexInternalRootCA.crt \
-    && addgroup --system backend \
-    && adduser -S -s /bin/false -G backend backend -D -H
+    && rm -rf YandexInternalRootCA.crt
 
 COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
