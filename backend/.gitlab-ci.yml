@@ -40,9 +40,6 @@ upload-backend:
   stage: release
   variables:
     GIT_STRATEGY: none
-  needs:
-    - sonarqube-backend-sast
-    - gitlab-sast
   image:
     name: gcr.io/go-containerregistry/crane:debug
     entrypoint: [ "" ]
