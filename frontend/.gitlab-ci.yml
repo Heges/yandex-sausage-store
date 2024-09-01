@@ -8,10 +8,6 @@ stages:
   - deploy
   - notify
 
-cache:
-  paths:
-    - frontend/dist
-
 build-frontend-code-job:
   stage: build  
   # only:
@@ -73,9 +69,7 @@ upload-frontend-release:
       
 deploy-frontend:
   stage: deploy
-  image: alpine:3.18  
-  needs:
-    - upload-frontend-release
+  image: alpine:3.18
   before_script:
     - apk add gettext openssh-client bash
     - eval $(ssh-agent -s)
