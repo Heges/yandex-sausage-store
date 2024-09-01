@@ -27,6 +27,13 @@ RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \
     && rm -rf YandexInternalRootCA.crt
 
+RUN keytool -importcert \
+             -file root.crt \
+             -alias yandex \
+             -cacerts \
+             -storepass changeit \
+             -noprompt 
+
 COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
 EXPOSE 8080
