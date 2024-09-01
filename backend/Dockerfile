@@ -9,12 +9,16 @@ RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs
 # шаг релиза
 FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
 ARG VERSION=${VERSION}
+RUN  addgroup --system backend \
+    && adduser -S -s /bin/false -G backend backend -D -H \
+	&& mkdir -p /app \ 
+	&& chown -R backend:backend /app
+	
 WORKDIR /app
 COPY --from=builder /usr/src/app/YandexInternalRootCA.crt .
 
 # Создание каталога для сертификата и копирование его туда
-RUN  addgroup --system backend \
-    && adduser -S -s /bin/false -G backend backend -D -H
+
 RUN mkdir -p /home/backend/.postgresql \
     && chmod 755 /home/backend/.postgresql 
 
