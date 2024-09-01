@@ -31,5 +31,5 @@ COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
 EXPOSE 8080
 USER backend
-ENTRYPOINT ["java", "-jar", "-Dmyserver.bindPort=8080", "/app/sausage-store.jar"]
-# CMD ["tail", "-f", "/dev/null"]
+# ENTRYPOINT ["java", "-jar", "-Dmyserver.bindPort=8080", "/app/sausage-store.jar"]
+CMD ["tail", "-f", "/dev/null"]
