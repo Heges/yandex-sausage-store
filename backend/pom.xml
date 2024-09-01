@@ -81,7 +81,6 @@
                 <groupId>org.springframework.boot</groupId> 
 				<artifactId>spring-boot-starter-parent</artifactId> 
 				<version>2.6.2</version> 
-				<relativePath/>
             </plugin>
 			<plugin>
 				<groupId>org.flywaydb</groupId>
