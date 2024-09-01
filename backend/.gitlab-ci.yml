@@ -37,30 +37,30 @@ build-backend-code-job:
       --build-arg VERSION=$VERSION
       --cache=true
 
-# sonarqube-backend-sast:
-  # stage: test
-  # variables:
-    # SPRING_FLYWAY_ENABLED: "false"
-  # image: "maven:3.8-openjdk-16"
-  # needs:
-    # - build-backend-code-job
-  # script:
-    # - cd backend
-    # - >
-      # mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
-      # -Dsonar.projectKey=${SONAR_KEY_BACKEND}
-      # -Dsonar.host.url=${SONARQUBE_URL}
-      # -Dsonar.login=${SONAR_LOGIN}
+sonarqube-backend-sast:
+  stage: test
+  variables:
+    SPRING_FLYWAY_ENABLED: "false"
+  image: "maven:3.8-openjdk-16"
+  needs:
+    - build-backend-code-job
+  script:
+    - cd backend
+    - >
+      mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
+      -Dsonar.projectKey=${SONAR_KEY_BACKEND}
+      -Dsonar.host.url=${SONARQUBE_URL}
+      -Dsonar.login=${SONAR_LOGIN}
 
-# gitlab-sast:
-  # stage: test
-  # variables:
-    # SPRING_FLYWAY_ENABLED: "false"
-  # needs:
-    # - build-backend-code-job
-  # trigger:
-    # include:
-      # - template: Security/SAST.gitlab-ci.yml
+gitlab-sast:
+  stage: test
+  variables:
+    SPRING_FLYWAY_ENABLED: "false"
+  needs:
+    - build-backend-code-job
+  trigger:
+    include:
+      - template: Security/SAST.gitlab-ci.yml
 
 upload-backend:
   stage: release
