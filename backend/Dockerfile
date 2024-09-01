@@ -21,7 +21,7 @@ RUN mkdir -p /home/backend/.postgresql \
 
 COPY --from=builder /usr/src/app/root.crt /home/backend/.postgresql/root.crt 
 RUN chmod 644 /home/backend/.postgresql/root.crt \
-    && chown backend:backend /home/backend/.postgresql/root.crt
+    && chown -R backend:backend /home/backend/.postgresql
 
 RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \

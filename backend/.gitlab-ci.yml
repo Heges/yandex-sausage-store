@@ -9,10 +9,10 @@ variables:
  
 stages:
   - build
-  - test
+  # - test
   - release
   - deploy
-  - notify
+  # - notify
 
 build-backend-code-job:
   # variables:

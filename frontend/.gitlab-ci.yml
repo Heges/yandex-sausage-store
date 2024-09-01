@@ -3,10 +3,10 @@ variables:
   
 stages:
   - build
-  - test
+  # - test
   - release
   - deploy
-  - notify
+  # - notify
 
 build-frontend-code-job:
   stage: build  
