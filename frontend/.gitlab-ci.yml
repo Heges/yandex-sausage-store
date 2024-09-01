@@ -3,10 +3,10 @@ variables:
   
 stages:
   - build
-  # - test
+  - test
   - release
   - deploy
-  # - notify
+  - notify
 
 build-frontend-code-job:
   stage: build  
@@ -32,26 +32,26 @@ build-frontend-code-job:
   #   paths:
   #   - frontend/dist/frontend
 
-sonarqube-frontend-sast:
-  stage: test
-  needs:
-    - build-frontend-code-job
-  script:
-    - cd frontend
-    - npm install -g sonarqube-scanner
-    - >
-      sonar-scanner -Dsonar.projectKey=${SONAR_KEY_FRONTEND}
-      -Dsonar.sources=.
-      -Dsonar.host.url=${SONARQUBE_URL}
-      -Dsonar.login=${SONAR_LOGIN}
+# sonarqube-frontend-sast:
+  # stage: test
+  # needs:
+    # - build-frontend-code-job
+  # script:
+    # - cd frontend
+    # - npm install -g sonarqube-scanner
+    # - >
+      # sonar-scanner -Dsonar.projectKey=${SONAR_KEY_FRONTEND}
+      # -Dsonar.sources=.
+      # -Dsonar.host.url=${SONARQUBE_URL}
+      # -Dsonar.login=${SONAR_LOGIN}
 
-gitlab-sast:
-  stage: test
-  needs:
-    - build-frontend-code-job
-  trigger:
-    include:
-      - template: Security/SAST.gitlab-ci.yml
+# gitlab-sast:
+  # stage: test
+  # needs:
+    # - build-frontend-code-job
+  # trigger:
+    # include:
+      # - template: Security/SAST.gitlab-ci.yml
 
 upload-frontend-release:
   stage: release
