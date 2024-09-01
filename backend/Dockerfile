@@ -4,7 +4,6 @@ WORKDIR /usr/src/app
 COPY ./src ./src
 COPY *.xml ./
 RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs/CA.pem \
-    && wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" --output-document root.crt \
     && mvn package -Dversion.application=${VERSION} -Dmaven.test.skip=true
 
 # шаг релиза
@@ -19,20 +18,13 @@ RUN  addgroup --system backend \
 RUN mkdir -p /home/backend/.postgresql \
     && chmod 755 /home/backend/.postgresql 
 
-COPY --from=builder /usr/src/app/root.crt /home/backend/.postgresql/root.crt 
+COPY --from=builder /usr/src/app/YandexInternalRootCA.crt /home/backend/.postgresql/root.crt 
 RUN chmod 644 /home/backend/.postgresql/root.crt \
     && chown -R backend:backend /home/backend/
 
 RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \
     && rm -rf YandexInternalRootCA.crt
-
-RUN keytool -importcert \
-             -file root.crt \
-             -alias yandex \
-             -cacerts \
-             -storepass changeit \
-             -noprompt 
 
 COPY --chown=backend:backend \
      --from=builder /usr/src/app/target/sausage-store-${VERSION}.jar ./sausage-store.jar
