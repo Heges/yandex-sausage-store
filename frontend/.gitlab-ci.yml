@@ -77,31 +77,15 @@ deploy-frontend:
   needs:
     - upload-frontend-release
   before_script:
-    - echo "Проверяем агент"
-    - |
-      apk add openssh-client bash
-      eval $(ssh-agent -s)
-      echo "Добавляем ключ"
-      echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
-      echo "Выдаём права и настраиваем SSH"
-      mkdir -p ~/.ssh
-      chmod 700 ~/.ssh
-      echo "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
-      chmod 644 ~/.ssh/known_hosts
-      ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
-      chmod 644 ~/.ssh/known_hosts
-      envsubst < ./frontend/deploy.sh|ssh ${DEV_USER}@${DEV_HOST}
+    - apk add gettext openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
   script:
-    - scp ./frontend/nginx.conf ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage.conf
-    - scp ./frontend/Dockerfile ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/frontend-build/Dockerfile
-    - ssh ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p /tmp/${CI_PROJECT_DIR}/frontend/"
-    - scp ./frontend/default.conf ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/${CI_PROJECT_DIR}/frontend/default.conf
-    - scp ./frontend/default.conf ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/frontend-build/default.conf
-    - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export CI_REGISTRY_USER=${CI_REGISTRY_USER}; export CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}; setsid /bin/bash -s" < ./frontend/deploy.sh
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-    url: http://${DEV_HOST}:80
-    auto_stop_in: 1h
+    - envsubst < ./frontend/deploy.sh | ssh -t -o StrictHostKeyChecking=no ${DEV_USER}@${DEV_HOST}
   rules: 
     - when: manual
 
