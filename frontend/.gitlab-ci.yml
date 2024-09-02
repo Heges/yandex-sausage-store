@@ -85,5 +85,5 @@ telegram-notification-frontend:
     variables:
       - $CI_COMMIT_MESSAGE
       - $CI_PIPELINE_SOURCE
-   needs:
-    - job: build-frontend-code-job
+    needs:
+      - job: build-frontend-code-job
