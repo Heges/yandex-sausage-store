@@ -71,6 +71,7 @@ deploy-frontend:
   rules: 
     - when: manual
 
+
 telegram-notification-frontend:
   stage: notify
   script:
@@ -85,5 +86,8 @@ telegram-notification-frontend:
     variables:
       - $CI_COMMIT_MESSAGE
       - $CI_PIPELINE_SOURCE
-    needs:
-      - job: build-frontend-code-job
+    # changes:
+    #   - frontend/*
+  needs:
+    - job: build-frontend-code-job
+
