@@ -23,9 +23,6 @@ build-frontend-code-job:
 
 upload-frontend-release:
   stage: release
-  needs:
-    - sonarqube-frontend-sast
-    - gitlab-sast
   image:
     name: gcr.io/go-containerregistry/crane:debug
     entrypoint: [ "" ]
@@ -65,7 +62,3 @@ telegram-notification-frontend:
     variables:
       - $CI_COMMIT_MESSAGE
       - $CI_PIPELINE_SOURCE
-    # changes:
-    #   - frontend/*
-  needs:
-    - job: build-frontend-code-job
