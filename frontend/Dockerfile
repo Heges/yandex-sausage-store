@@ -5,7 +5,11 @@ RUN npm install
 RUN npm run build
 
 FROM nginx:stable-alpine3.19-slim
+
+RUN  mkdir -p /sausage-store \ 
+	&& chown -R www-data:www-data /sausage-store
+	
 WORKDIR /sausage-store
 COPY default.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /opt/dist/frontend ./frontend
+COPY --chown www-data:www-data --from=builder /opt/dist/frontend ./frontend
 EXPOSE 80

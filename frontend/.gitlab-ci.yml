@@ -8,10 +8,7 @@ stages:
   - notify
 
 build-frontend-code-job:
-  stage: build  
-  # only:
-  #   changes:
-  #   - frontend/*/
+  stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.9.0-debug
     entrypoint: [""]
@@ -23,13 +20,6 @@ build-frontend-code-job:
       --destination "${CI_REGISTRY_IMAGE}/sausage-frontend:$CI_COMMIT_SHA"
       --build-arg VERSION=$VERSION
       --cache=true
-  # script:
-    # - cd frontend
-    # - npm install
-    # - npm run build
-  # artifacts:
-  #   paths:
-  #   - frontend/dist/frontend
 
 upload-frontend-release:
   stage: release
