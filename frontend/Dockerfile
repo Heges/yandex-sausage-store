@@ -11,5 +11,5 @@ FROM nginx:stable-alpine3.19-slim
 WORKDIR /sausage-store
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /opt/dist/frontend ./frontend
-RUN chown -R www-data:www-data /sausage-store
+RUN chown -R nginx:nginx /sausage-store
 EXPOSE 80
