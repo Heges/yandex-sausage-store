@@ -1,11 +1,17 @@
-#! /bin/bash
+#!/bin/bash
 set -xe
 
-sudo cp -rf backend.service /etc/systemd/system/backend.service
-sudo rm -rf /home/student/sausage-store.jar
-curl -u ${NEXUS_REPO_USER}:${NEXUS_REPO_PASS} -o sausage-store.jar ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_BACKEND_NAME}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar
-sudo cp -rf ./sausage-store.jar /var/student/sausage-store.jar
+cat <<EOL > .env
+SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}?ssl=true
+SPRING_DATASOURCE_USERNAME=${PSQL_ADMIN}
+SPRING_DATASOURCE_PASSWORD=${PSQL_PASSWORD}
+SPRING_DATA_MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+EOL
 
-sudo systemctl daemon-reload
-sudo systemctl enable backend.service
-sudo systemctl restart backend.service
+sudo docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+sudo docker network create -d bridge sausage_network || true
+sudo docker rm -f sausage-backend || true
+sudo docker run -d --name sausage-backend \
+     --env-file .env \
+     --network=sausage_network \
+     "${CI_REGISTRY_IMAGE}"/sausage-backend:"${VERSION}"

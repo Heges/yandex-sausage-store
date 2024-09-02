@@ -14,9 +14,6 @@ stages:
   - deploy
   - notify
 
-cache:
-  paths:
-    - ${CI_PROJECT_DIR}/.m2/repository
 
 build-backend-code-job:
   # variables:
@@ -28,16 +25,18 @@ build-backend-code-job:
   # only:
     # changes:
     # - backend/*/
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  # переменные CI_REGISTRY_USER, CI_REGISTRY_PASSWORD, CI_REGISTRY генерятся Гитлабом, их задавать не надо
   script:
-    - cd backend
-    - mkdir -p ${MAVEN_REPO_PATH}
-    - >
-      mvn package -Dmaven.repo.local=${MAVEN_REPO_PATH}
-      -Dversion.application=${VERSION}
-  # artifacts:
-    # paths:
-      # - backend/target/sausage-store-${VERSION}.jar
-      # - ${CI_PROJECT_DIR}/.m2/
+    - echo "start build backend"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend"
+      --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-backend:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
 
 sonarqube-backend-sast:
   stage: test
@@ -64,54 +63,36 @@ gitlab-sast:
     include:
       - template: Security/SAST.gitlab-ci.yml
 
+
+
 upload-backend:
   stage: release
-  needs:
-    - sonarqube-backend-sast
-    - gitlab-sast
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd backend
-    - mvn deploy -DskipTests -Dmaven.repo.local=${MAVEN_REPO_PATH} -s settings.xml -Dversion.application=${VERSION}
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION
 
 deploy-backend:
-    stage: deploy
-    before_script:
-      - echo "Проверяем агент"
-      - |
-        if [ ! -f /usr/bin/ssh-agent ]; then
-          apt-get update -y
-          apt-get install openssh-client -y
-        fi
-        eval $(ssh-agent -s)
-        echo "Добавляем ключ"
-        echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
-        echo "Выдаём права и настраиваем SSH"
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        echo "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-        ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-    script:
-      - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_DBNAME}/$PSQL_DBNAME/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_ADMIN}/$PSQL_ADMIN/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_PASSWORD}/$PSQL_PASSWORD/" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_USER}/$MONGO_USER/" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_PASSWORD}/$MONGO_PASSWORD/" ./backend/backend.service.temp
-      #- sed -i "s|${MONGO_HOST}|$MONGO_HOST|" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_DATABASE}/$MONGO_DATABASE/" ./backend/backend.service.temp
-      - scp ./backend/backend.service.temp ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/backend.service
-      - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_BACKEND_NAME=${NEXUS_REPO_BACKEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./backend/deploy.sh
-    environment:
-      name: review/$CI_COMMIT_REF_NAME
-      url: https://${DEV_HOST}
-      auto_stop_in: 1h
-    rules: 
-      - when: manual
-    needs:
-      - job: upload-backend
+  stage: deploy
+  image: alpine:3.18
+  before_script:
+    - apk add gettext openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - envsubst < ./backend/deploy.sh | ssh -t -o StrictHostKeyChecking=no ${DEV_USER}@${DEV_HOST}
+  rules: 
+    - when: manual
     
 
 telegram-notification-backend:
