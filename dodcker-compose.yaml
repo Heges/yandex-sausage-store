@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  backend:
+    image: ${CI_REGISTRY_IMAGE}/std-030-18/sausage-store/backend:${VERSION}
+    container_name: sausage-store-backend
+    environment:
+      # Переменные из application.properties можно заменить переменными окружения
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${SPRING_DATASOURCE_HOST}:${SPRING_DATASOURCE_PORT}/${SPRING_DATASOURCE_DATABASE}
+      SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
+    restart: always
+    networks:
+      - sausage-store
+  backend-report:
+    image: ${CI_REGISTRY_IMAGE}/sausage-backend-report:${VERSION}
+    container_name: sausage-store-backend-report
+    restart: always
+    environment:
+      PORT: 8080
+      SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
+    networks:
+      - sausage-store
+  frontend:
+    image: ${CI_REGISTRY_IMAGE}/sausage-frontend:${VERSION}
+    container_name: sausage-store-frontend
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - sausage-store
+
+networks:
+  sausage-store:

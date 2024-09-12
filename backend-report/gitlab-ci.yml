@@ -1,0 +1,73 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  REPORT_PORT: 8080
+  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  JAVA_OPTS: -XX:MaxRAMPercentage=90
+  MAVEN_OPTS: "-Dmaven.repo.local=$MAVEN_REPO_PATH"
+  SAST_EXCLUDED_ANALYZERS: "eslint, nodejs-scan"
+
+stages:
+  - build
+  - test
+  - release
+  - deploy
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend-report"
+      --dockerfile "${CI_PROJECT_DIR}/backend-report/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-backend-report:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+
+semgrep-sast:
+  variables:
+    COMPILE: "true"
+    SAST_JAVA_VERSION: 17
+    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  dependencies:
+    - build
+
+release:
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  stage: release
+  script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend-report:$CI_COMMIT_SHA $VERSION
+  
+deploy:
+  stage: deploy
+  image: docker:24.0.7-alpine3.19
+  environment:
+    name: production/backend-report
+  when: manual
+  before_script:
+    - apk add openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY"| tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 600 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - ssh-add -L
+    - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
+  script:
+    - echo "VERSION=${VERSION}" >> deploy.env
+    - echo "PORT=8080" >> deploy.env
+    - echo "REPORT_PATH=/var/www-data/htdocs" >> deploy.env
+    - echo "REPORTS_MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true"" >> deploy.env
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker --context remote compose --env-file deploy.env up backend-report -d --pull "always" --force-recreate
