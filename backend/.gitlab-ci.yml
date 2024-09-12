@@ -28,16 +28,18 @@ build-backend-code-job:
   # only:
     # changes:
     # - backend/*/
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  # переменные CI_REGISTRY_USER, CI_REGISTRY_PASSWORD, CI_REGISTRY генерятся Гитлабом, их задавать не надо
   script:
-    - cd backend
-    - mkdir -p ${MAVEN_REPO_PATH}
-    - >
-      mvn package -Dmaven.repo.local=${MAVEN_REPO_PATH}
-      -Dversion.application=${VERSION}
-  # artifacts:
-    # paths:
-      # - backend/target/sausage-store-${VERSION}.jar
-      # - ${CI_PROJECT_DIR}/.m2/
+    - echo "start build backend"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend"
+      --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-backend:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
 
 sonarqube-backend-sast:
   stage: test
@@ -64,14 +66,18 @@ gitlab-sast:
     include:
       - template: Security/SAST.gitlab-ci.yml
 
-upload-backend:
+uupload-backend:
   stage: release
-  needs:
-    - sonarqube-backend-sast
-    - gitlab-sast
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd backend
-    - mvn deploy -DskipTests -Dmaven.repo.local=${MAVEN_REPO_PATH} -s settings.xml -Dversion.application=${VERSION}
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION
 
 deploy-backend:
     stage: deploy

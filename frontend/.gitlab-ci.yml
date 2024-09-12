@@ -13,17 +13,19 @@ cache:
     - frontend/dist
 
 build-frontend-code-job:
-  stage: build  
-  # only:
-  #   changes:
-  #   - frontend/*/
-  script:        
-    - cd frontend
-    - npm install
-    - npm run build
-  # artifacts:
-  #   paths:
-  #   - frontend/dist/frontend
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo "start build frontend"
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/frontend"
+      --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-frontend:$CI_COMMIT_SHA"
+      --build-arg VERSION=$VERSION
+      --cache=true
+
 
 sonarqube-frontend-sast:
   stage: test
@@ -48,15 +50,14 @@ gitlab-sast:
 
 upload-frontend-release:
   stage: release
-  needs:
-    - sonarqube-frontend-sast
-    - gitlab-sast
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - pwd
-    - ls -l
-    - cd frontend/dist
-    - tar czvf sausage-store-${VERSION}.tar.gz frontend
-    - curl -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_URL}/repository/${NEXUS_REPO_FRONTEND_NAME}/${VERSION}/sausage-store-${VERSION}.tar.gz
+    - crane tag $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA $VERSION
       
 deploy-frontend:
   stage: deploy
