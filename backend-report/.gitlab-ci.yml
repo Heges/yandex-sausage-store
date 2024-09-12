@@ -92,4 +92,4 @@ telegram-notification-backend-report:
     # changes:
     #   - frontend/*
   needs:
-    - job: build-frontend-code-job
+    - job: build
