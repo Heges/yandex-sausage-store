@@ -26,7 +26,6 @@ backend-report:
   trigger:
     include:
       - "/backend-report/.gitlab-ci.yml"
-      # - local: /backend-report/.gitlab-ci.yml
     strategy: depend
   only:
     changes:
