@@ -48,6 +48,7 @@ gitlab-sast:
     include:
       - template: Security/SAST.gitlab-ci.yml
 
+
 upload-frontend-release:
   stage: release
   image:
@@ -61,34 +62,26 @@ upload-frontend-release:
       
 deploy-frontend:
   stage: deploy
-  needs:
-    - upload-frontend-release
-  before_script:
-    - echo "Проверяем агент"
-    - |
-      if [ ! -f /usr/bin/ssh-agent ]; then
-        apt-get update -y
-        apt-get install openssh-client -y
-      fi
-      eval $(ssh-agent -s)
-      echo "Добавляем ключ"
-      echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
-      echo "Выдаём права и настраиваем SSH"
-      mkdir -p ~/.ssh
-      chmod 700 ~/.ssh
-      echo "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
-      chmod 644 ~/.ssh/known_hosts
-      ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
-      chmod 644 ~/.ssh/known_hosts
-  script:
-    - scp ./frontend/nginx.conf ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage.conf
-    - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_FRONTEND_NAME=${NEXUS_REPO_FRONTEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./frontend/deploy.sh
+  image: docker:24.0.7-alpine3.19
   environment:
-    name: review/$CI_COMMIT_REF_NAME
-    url: http://${DEV_HOST}:80
-    auto_stop_in: 1h
-  rules: 
-    - when: manual
+    name: production/frontend
+  when: manual
+  before_script:
+    - apk add docker-cli-compose openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 600 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
+  script:
+    - echo "VERSION=${VERSION}" >> deploy.env
+    - echo "REPORTS_MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true"" >> deploy.env
+    - echo "REPORT_PATH=/var/www-data/htdocs" >> deploy.env
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker --context remote compose --env-file deploy.env up frontend -d --pull "always" --force-recreate 
+
 
 telegram-notification-frontend:
   stage: notify
