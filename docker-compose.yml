@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   backend:
-    image: ${CI_REGISTRY_IMAGE}/std-030-18/sausage-store/backend:${VERSION}
+    image: $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION
     container_name: sausage-store-backend
     environment:
       # Переменные из application.properties можно заменить переменными окружения
@@ -14,7 +14,7 @@ services:
     networks:
       - sausage-store
   backend-report:
-    image: ${CI_REGISTRY_IMAGE}/sausage-backend-report:${VERSION}
+    image: $CI_REGISTRY_IMAGE/sausage-backend-report:$CI_COMMIT_SHA $VERSION
     container_name: sausage-store-backend-report
     restart: always
     environment:
@@ -23,7 +23,7 @@ services:
     networks:
       - sausage-store
   frontend:
-    image: ${CI_REGISTRY_IMAGE}/sausage-frontend:${VERSION}
+    image: $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA $VERSION
     container_name: sausage-store-frontend
     restart: always
     ports:
