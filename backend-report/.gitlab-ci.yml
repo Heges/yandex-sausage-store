@@ -65,7 +65,6 @@ deploy:
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - ssh-add -L
-    - scp ./deploy.env ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/deploy.env
     - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
   script:
     - echo "VERSION=${VERSION}" >> deploy.env
