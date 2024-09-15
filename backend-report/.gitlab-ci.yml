@@ -55,19 +55,19 @@ deploy:
   image: docker:24.0.7-alpine3.19
   environment:
     name: production/backend-report
-  when: manual
   before_script:
+    - echo "Устанавливаем необходимые зависимости"
     - apk add docker-cli-compose openssh-client
     - eval $(ssh-agent -s)
     - echo "Добавляем ключ"
-    - echo "$SSH_PRIVATE_KEY"| tr -d '\r' | ssh-add
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - echo "Настраиваем SSH"
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - ssh-add -L
     - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
   script:
     - echo "VERSION=${VERSION}" >> deploy.env
