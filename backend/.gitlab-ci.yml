@@ -44,7 +44,7 @@ build-backend-code-job:
 sonarqube-backend-sast:
   stage: test
   needs:
-    - build-backend
+    - build-backend-code-job
   image: maven:3.8-openjdk-16
   variables:
     SPRING_FLYWAY_ENABLED: "false"
