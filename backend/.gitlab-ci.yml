@@ -88,10 +88,14 @@ deploy-backend:
     before_script:
         - apk add docker-cli-compose openssh-client
         - eval $(ssh-agent -s)
+        - echo "Добавляем ключ"
         - echo "$SSH_PRIVATE_KEY"| tr -d '\r' | ssh-add -
         - mkdir -p ~/.ssh
-        - chmod 600 ~/.ssh
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
         - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+        - chmod 644 ~/.ssh/known_hosts
+        - ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
         - chmod 644 ~/.ssh/known_hosts
         - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
     script:
