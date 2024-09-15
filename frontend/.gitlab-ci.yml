@@ -65,7 +65,7 @@ deploy-frontend:
   image: docker:24.0.7-alpine3.19
   environment:
     name: production/frontend
-  when: manual
+  # when: manual
   before_script:
     - echo "Устанавливаем необходимые зависимости"
     - apk add docker-cli-compose openssh-client
