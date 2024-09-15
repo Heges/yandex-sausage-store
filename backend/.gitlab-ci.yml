@@ -43,18 +43,18 @@ build-backend-code-job:
 
 sonarqube-backend-sast:
   stage: test
+  needs:
+    - build-backend
+  image: maven:3.8-openjdk-16
   variables:
     SPRING_FLYWAY_ENABLED: "false"
-  image: "maven:3.8-openjdk-16"
-  needs:
-    - build-backend-code-job
-  script:
-    - cd backend
-    - >
-      mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
-      -Dsonar.projectKey=${SONAR_KEY_BACKEND}
-      -Dsonar.host.url=${SONARQUBE_URL}
-      -Dsonar.login=${SONAR_LOGIN}
+    SPRING_CLOUD_VAULT_ENABLED: "false"
+  script:   
+    - cd backend 
+    - unset SPRING_DATASOURCE_URL
+    - unset SPRING_DATASOURCE_USERNAME
+    - unset SPRING_DATASOURCE_PASSWORD  
+    - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.projectName=$SONAR_KEY_BACKEND -e -X
 
 gitlab-sast:
   stage: test
@@ -86,10 +86,12 @@ deploy-backend:
         name: production/backend
     when: manual
     before_script:
+        - echo "Устанавливаем необходимые зависимости"
         - apk add docker-cli-compose openssh-client
         - eval $(ssh-agent -s)
         - echo "Добавляем ключ"
-        - echo "$SSH_PRIVATE_KEY"| tr -d '\r' | ssh-add
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+        - echo "Настраиваем SSH"
         - mkdir -p ~/.ssh
         - chmod 700 ~/.ssh
         - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
