@@ -10,13 +10,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
-    restart: always
+    # restart: always
     networks:
       - sausage-store
   backend-report:
     image: $CI_REGISTRY_IMAGE/sausage-backend-report:$VERSION
     container_name: sausage-store-backend-report
-    restart: always
+    # restart: always
     environment:
       PORT: 8080
       SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
