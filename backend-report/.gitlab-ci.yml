@@ -72,8 +72,9 @@ deploy:
   script:
     - echo "VERSION=${VERSION}" >> deploy.env
     - echo "PORT=8080" >> deploy.env
-    - echo "REPORT_PATH=/var/www-data/htdocs" >> deploy.env
-    - echo "REPORTS_MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true" >> deploy.env
+    # - echo "REPORT_PATH=/var/www-data/htdocs" >> deploy.env
+    - echo "REPORT_PATH=/app/logs" >> deploy.env
+    - echo "REPORTS_MONGODB_URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true"" >> deploy.env
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker --context remote compose --env-file deploy.env up backend-report -d --pull "always" --force-recreate
     
