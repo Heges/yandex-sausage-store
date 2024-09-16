@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # DB = os.environ.get('DB') if os.environ.get('DB') else "mongodb://localhost:27017/test"
 DB = os.environ.get('DB') if os.environ.get('DB') else "mongodb://std-030-18:Testusr1234@rc1a-3nb7p7jsmbup6crt.mdb.yandexcloud.net:27018/std-030-18?tls=true"
-client = pymongo.MongoClient(DB)
+client = pymongo.MongoClient(DB, tlsCAFile=certifi.where())
 parsedUri = pymongo.uri_parser.parse_uri(DB)
 db = client[parsedUri['database']]
 
