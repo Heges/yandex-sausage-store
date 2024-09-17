@@ -19,7 +19,7 @@ services:
     restart: always
     environment:
       PORT: 8080
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+      SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
     networks:
       - sausage-store
   frontend:
