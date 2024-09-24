@@ -6,11 +6,6 @@ COPY *.xml ./
 RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs/CA.pem \
     && mvn package -Dversion.application=${VERSION} -Dmaven.test.skip=true
 
-# шаг релиза
-FROM ubuntu:20.04
-RUN apt-get update
-RUN apt-get install -y curl
-
 FROM openjdk:17-jdk-alpine
 ARG VERSION=${VERSION}
 RUN  addgroup --system backend \
