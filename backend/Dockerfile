@@ -7,11 +7,12 @@ RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs
     && mvn package -Dversion.application=${VERSION} -Dmaven.test.skip=true
 
 # шаг релиза
-FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
+FROM ubuntu:20.04
 RUN apk add --update \
     curl \
     && rm -rf /var/cache/apk/*
 
+FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
 ARG VERSION=${VERSION}
 RUN  addgroup --system backend \
     && adduser -S -s /bin/false -G backend backend -D -H \
