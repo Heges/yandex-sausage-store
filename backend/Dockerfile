@@ -11,7 +11,7 @@ FROM ubuntu:20.04
 RUN apt-get update
 RUN apt-get install -y curl
 
-FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
+FROM openjdk:17-jdk-alpine
 ARG VERSION=${VERSION}
 RUN  addgroup --system backend \
     && adduser -S -s /bin/false -G backend backend -D -H \
@@ -29,6 +29,8 @@ RUN mkdir -p /home/backend/.postgresql \
 COPY --from=builder /usr/src/app/YandexInternalRootCA.crt /home/backend/.postgresql/root.crt 
 RUN chmod 644 /home/backend/.postgresql/root.crt \
     && chown -R backend:backend /home/backend/
+	
+RUN apk add --no-cache curl
 
 RUN keytool -importcert -file YandexInternalRootCA.crt \
     -alias yandex -cacerts -storepass changeit -noprompt \
