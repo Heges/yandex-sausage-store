@@ -8,9 +8,8 @@ RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs
 
 # шаг релиза
 FROM ubuntu:20.04
-RUN apk add --update \
-    curl \
-    && rm -rf /var/cache/apk/*
+RUN apt-get update
+RUN apt-get install -y curl
 
 FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
 ARG VERSION=${VERSION}
