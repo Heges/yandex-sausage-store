@@ -1,19 +1,47 @@
 version: "3.8"
 
 services:
-  backend:
-    image: $CI_REGISTRY_IMAGE/sausage-backend:$VERSION
-    container_name: sausage-store-backend
+  backend-blue:
+    container_name: backend-blue     
+    image: ${CI_REGISTRY_IMAGE}/sausage-backend:${VERSION}
+    restart: always
     environment:
-      # Переменные из application.properties можно заменить переменными окружения
+      VIRTUAL_HOST: "backend"
+      VIRTUAL_PORT: "8080"     
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
-    restart: always
     networks:
       - sausage-store
-  backend-report:
+    healthcheck:
+      test: curl --fail -s http://localhost:8080/actuator/health
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 6
+
+  backend-green:
+    container_name: backend-green          
+    image: ${CI_REGISTRY_IMAGE}/sausage-backend:${VERSION}
+    restart: always
+    environment:
+      VIRTUAL_HOST: "backend"
+      VIRTUAL_PORT: "8080"
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
+    networks:
+      - sausage-store
+    healthcheck:
+      test: curl --fail -s http://localhost:8080/actuator/health
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 6
+
+ backend-report:
     image: $CI_REGISTRY_IMAGE/sausage-backend-report:$VERSION
     container_name: sausage-store-backend-report
     restart: always
@@ -22,6 +50,8 @@ services:
       SPRING_DATA_MONGODB_URI: ${REPORTS_MONGODB_URI}
     networks:
       - sausage-store
+
+
   frontend:
     image: $CI_REGISTRY_IMAGE/sausage-frontend:$VERSION
     container_name: sausage-store-frontend

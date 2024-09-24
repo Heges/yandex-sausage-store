@@ -101,8 +101,14 @@ deploy-backend:
         - docker context create remote --description "remote ssh" --docker "host=ssh://${DEV_USER}@${DEV_HOST}"
     script:
         - echo "VERSION=${VERSION}" >> deploy.env
+        - echo "SPRING_DATASOURCE_URL=${PSQL_DATASOURCE}" >> deploy.env
+        - echo "SPRING_DATASOURCE_USERNAME=${PSQL_USER}" >> deploy.env
+        - echo "SPRING_DATASOURCE_PASSWORD=${PSQL_PASSWORD}" >> deploy.env
+        - echo "REPORTS_MONGODB_URI=${SPRING_DATA_MONGODB_URI}" >> deploy.env
+        - echo "REPORT_PATH=/var/www-data/htdocs" >> deploy.env
         - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-        - docker --context remote compose --env-file deploy.env up backend -d --pull "always" --force-recreate
+        - chmod +x deploy.sh
+        - ./deploy.sh
     
 
 telegram-notification-backend:
