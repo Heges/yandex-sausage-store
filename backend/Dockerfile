@@ -8,11 +8,9 @@ RUN wget -O YandexInternalRootCA.crt https://storage.yandexcloud.net/cloud-certs
 
 # шаг релиза
 FROM bellsoft/liberica-runtime-container:jre-17-slim-musl
-echo "run apk curl"
 RUN apk add --update \
     curl \
     && rm -rf /var/cache/apk/*
-echo "run apk curl installed"
 
 ARG VERSION=${VERSION}
 RUN  addgroup --system backend \
