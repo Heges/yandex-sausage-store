@@ -4,7 +4,6 @@ services:
   backend-blue:
     image: $CI_REGISTRY_IMAGE/sausage-backend:$VERSION
     container_name: backend-blue
-    restart: always
     environment:
       # Переменные из application.properties можно заменить переменными окружения
       VIRTUAL_HOST: "backend"
@@ -25,7 +24,6 @@ services:
   backend-green:
     image: $CI_REGISTRY_IMAGE/sausage-backend:$VERSION
     container_name: backend-green
-    restart: always
     environment:
       # Переменные из application.properties можно заменить переменными окружения
       VIRTUAL_HOST: "backend"
