@@ -12,6 +12,7 @@ check_container_status() {
 
 deploy_container() {
   local container_name=$1
+  echo "try to start container name {$container_name}"
   docker --context remote compose --env-file deploy.env up $container_name -d --pull "always" --force-recreate
 }
 
@@ -19,6 +20,7 @@ deploy_container() {
 
 stop_container() {
   local container_name=$1
+  echo "try to stop container name {$container_name}"
   docker --context remote stop $container_name
 }
 

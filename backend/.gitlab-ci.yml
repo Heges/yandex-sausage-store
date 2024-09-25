@@ -82,8 +82,8 @@ uupload-backend:
 deploy-backend:
     stage: deploy
     image: docker:24.0.7-alpine3.19
-    environment:
-        name: production/backend
+    # environment:
+        # name: production/backend
     # when: manual
     before_script:
         - echo "Устанавливаем необходимые зависимости"
