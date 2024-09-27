@@ -23,7 +23,6 @@ services:
       retries: 6
   backend-green:
     image: $CI_REGISTRY_IMAGE/sausage-backend:$VERSION
-    container_name: backend-green
     environment:
       # Переменные из application.properties можно заменить переменными окружения
       VIRTUAL_HOST: "backend"
@@ -43,7 +42,6 @@ services:
       retries: 6
   backend-report:
     image: $CI_REGISTRY_IMAGE/sausage-backend-report:$VERSION
-    container_name: sausage-store-backend-report
     restart: always
     environment:
       PORT: 8080
@@ -52,12 +50,15 @@ services:
       - sausage-store
   frontend:
     image: $CI_REGISTRY_IMAGE/sausage-frontend:$VERSION
-    container_name: sausage-store-frontend
     restart: always
+    environment:
+        DEFAULT_HOST: "backend"
     ports:
       - "80:80"
     networks:
       - sausage-store
+    volumes:
+          - /var/run/docker.sock:/tmp/docker.sock:ro
 
 networks:
   sausage-store:
