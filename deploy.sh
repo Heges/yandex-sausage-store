@@ -12,7 +12,6 @@ check_container_status() {
 
 deploy_container() {
   local container_name=$1
-  echo "Запускаем контейнер с именем: " $container_name
   docker --context remote compose --env-file deploy.env up $container_name -d --pull "always" --force-recreate
 }
 
@@ -20,7 +19,6 @@ deploy_container() {
 
 stop_container() {
   local container_name=$1
-  echo "Останавливаем контейнер с именем: " $container_name
   docker --context remote stop $container_name
 }
 
@@ -28,66 +26,63 @@ stop_container() {
 
 get_containers_by_pattern() {
   local pattern=$1
-  docker --context remote ps --format "{{.Names}}" | grep "$pattern" | tr -d ' '
+  docker --context remote ps --format "{{.Names}}" | grep "$pattern" | tr -d ' ' 
 }
 
 # Проверка состояния контейнеров backend-green
-# grep_container_green_name="$(docker ps --format "{{.Names}}" | grep green | tr -d ' ')"
-# grep_container_blue_name="$(docker ps --format "{{.Names}}" | grep blue | tr -d ' ')"
 
-green_containers=$(get_containers_by_pattern "green")
+green_containers=$(get_containers_by_pattern "backend-green")
 green_healthy=false
-echo "Проходимся по всем контейнерам проверяем их состояние"
+
 for container in $green_containers; do
   green_status=$(check_container_status $container)
-  echo "Статус контейнера: $green_status"
   if [ "$green_status" = "healthy" ]; then
     green_healthy=true
-	echo "Выставляем green_healhty в true"
     break
   fi
 done
 
-echo "Подготавливаемся к запуску"
-blue_containers=$(docker ps --format "{{.Names}}" | grep blue | tr -d ' ')
+echo $green_healthy
+
 if [ "$green_healthy" = true ]; then
-  echo "Green_healty = true начинаем с синего"
-  deploy_container $blue_containers
+  echo "At least one backend-green container is healthy. Deploying backend-blue..."
+  bb=$(docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' ')
+  echo "deploy blue ${(docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' ')} 1" 
+  echo "deploy blue ${bb} 2" 
+  deploy_container $(docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' ') 
 
   # Ждем, пока backend-blue станет healthy
 
   while true; do
-    blue_status=$(check_container_status $blue_containers)
-	echo "Статус контейнера: $blue_status"
+	bb=$(docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' ')
+    blue_status=$bb
     if [ "$blue_status" = "healthy" ]; then
-		echo "Выставляем blue_healhty в true"
       break
     fi
-    echo "Waiting for ${blue_containers} to become healthy..."
+    echo "Waiting for backend-blue to become healthy..."
     sleep 10
   done
 
   echo "backend-blue is now healthy. Stopping backend-green..."
-  grep_container_green_name=$(docker ps --format "{{.Names}}" | grep green | tr -d ' ')
-  stop_container $grep_container_green_name
+  bg=$(docker --context remote ps --format "{{.Names}}" | grep green -A 1 || echo "empty" | tr -d ' ')
+  stop_container $bg
 else
   echo "No backend-green container is healthy. Deploying backend-green first..."
-  grep_container_blue_name="$(docker ps --format "{{.Names}}" | grep blue | tr -d ' ')"
-  deploy_container $grep_container_blue_name
+  bg=$(docker --context remote ps --format "{{.Names}}" | grep green -A 1 || echo "empty" | tr -d ' ')
+  deploy_container $bg
   
   # Ждем, пока backend-green станет healthy
 
   while true; do
-	grep_container_green_name=$(docker ps --format "{{.Names}}" | grep green | tr -d ' ')
-    green_status=$(check_container_status $grep_container_green_name)
-	 echo "Статус контейнера: $green_status"
+    green_status=$(check_container_status "backend-green")
     if [ "$green_status" = "healthy" ]; then
       break
     fi
-    echo "Waiting for ${grep_container_green_name} to become healthy..."
+    echo "Waiting for backend-green to become healthy... "
     sleep 10
   done
 
   echo "backend-green is now healthy. Stopping backend-blue..."
-  stop_container $blue_containers
+  bb=$(docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' ')
+  stop_container $bb
 fi
