@@ -32,8 +32,9 @@ get_containers_by_pattern() {
 }
 
 # Проверка состояния контейнеров backend-green
-
-green_containers=$(get_containers_by_pattern docker ps --format "{{.Names}}" | grep green | tr -d ' ')
+grep_container_green_name="$(docker ps --format "{{.Names}}" | grep green | tr -d ' ')"
+grep_container_blue_name="$(docker ps --format "{{.Names}}" | grep blue | tr -d ' ')"
+green_containers=$(get_containers_by_pattern $grep_container_green_name)
 green_healthy=false
 
 for container in $green_containers; do
@@ -48,36 +49,36 @@ echo $green_healthy
 
 if [ "$green_healthy" = true ]; then
   echo "At least one backend-green container is healthy. Deploying backend-blue..."
-  deploy_container "docker ps --format {{.Names}} | grep blue"
+  deploy_container $grep_container_blue_name
 
   # Ждем, пока backend-blue станет healthy
 
   while true; do
-    blue_status=$(check_container_status docker ps --format "{{.Names}}" | grep blue | tr -d ' ')
+    blue_status=$(check_container_status grep_container_blue_name)
     if [ "$blue_status" = "healthy" ]; then
       break
     fi
-    echo "Waiting for backend-blue to become healthy..."
+    echo "Waiting for $grep_container_blue_name to become healthy..."
     sleep 10
   done
 
   echo "backend-blue is now healthy. Stopping backend-green..."
-  stop_container "backend-green"
+  stop_container $grep_container_green_name
 else
   echo "No backend-green container is healthy. Deploying backend-green first..."
-  deploy_container "backend-green"
+  deploy_container $grep_container_green_name
   
   # Ждем, пока backend-green станет healthy
 
   while true; do
-    green_status=$(check_container_status docker ps --format "{{.Names}}" | grep green | tr -d ' ')
+    green_status=$(check_container_status $grep_container_green_name)
     if [ "$green_status" = "healthy" ]; then
       break
     fi
-    echo "Waiting for backend-green to become healthy... "
+    echo "Waiting for $grep_container_green_name to become healthy... "
     sleep 10
   done
 
   echo "backend-green is now healthy. Stopping backend-blue..."
-  stop_container "backend-blue"
+  stop_container $grep_container_blue_name
 fi
