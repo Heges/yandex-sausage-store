@@ -4,6 +4,7 @@
 
 check_container_status() {
   local container_name=$1
+  echo "check_container_status контейнера: $1"
   local status=$(docker --context remote inspect -f '{{.State.Health.Status}}' $container_name 2>/dev/null || echo "unknown")
   echo $status
 }
@@ -12,7 +13,7 @@ check_container_status() {
 
 deploy_container() {
   local container_name=$1
-  echo "try to start container name $container_name"
+  echo "Запускаем контейнер с именем: $1"
   docker --context remote compose --env-file deploy.env up $container_name -d --pull "always" --force-recreate
 }
 
@@ -36,19 +37,21 @@ grep_container_green_name="$(docker ps --format "{{.Names}}" | grep green | tr -
 grep_container_blue_name="$(docker ps --format "{{.Names}}" | grep blue | tr -d ' ')"
 green_containers=$(get_containers_by_pattern $grep_container_green_name)
 green_healthy=false
-
+echo "Проходимся по всем контейнерам проверяем их состояние"
 for container in $green_containers; do
   green_status=$(check_container_status $container)
+  echo "Статус контейнера: $green_status"
   if [ "$green_status" = "healthy" ]; then
     green_healthy=true
+	echo "Выставляем green_healhty в true"
     break
   fi
 done
 
-echo $green_healthy
+echo "Подготавливаемся к запуску"
 
 if [ "$green_healthy" = true ]; then
-  echo "At least one backend-green container is healthy. Deploying backend-blue..."
+  echo "Как минимум один из контейнеров в порядке публикуемся."
   deploy_container $grep_container_blue_name
 
   # Ждем, пока backend-blue станет healthy
@@ -72,6 +75,7 @@ else
 
   while true; do
     green_status=$(check_container_status $grep_container_green_name)
+	 echo "Статус контейнера: $green_status"
     if [ "$green_status" = "healthy" ]; then
       break
     fi
