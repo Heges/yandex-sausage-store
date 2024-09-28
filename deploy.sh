@@ -33,7 +33,7 @@ get_containers_by_pattern() {
 
 # Проверка состояния контейнеров backend-green
 
-green_containers=$(get_containers_by_pattern "backend-green")
+green_containers=$(get_containers_by_pattern docker ps --format "{{.Names}}" | grep green | tr -d ' ')
 green_healthy=false
 
 for container in $green_containers; do
@@ -53,7 +53,7 @@ if [ "$green_healthy" = true ]; then
   # Ждем, пока backend-blue станет healthy
 
   while true; do
-    blue_status=$(check_container_status "docker ps --format {{.Names}} | grep blue")
+    blue_status=$(check_container_status docker ps --format "{{.Names}}" | grep blue | tr -d ' ')
     if [ "$blue_status" = "healthy" ]; then
       break
     fi
@@ -70,7 +70,7 @@ else
   # Ждем, пока backend-green станет healthy
 
   while true; do
-    green_status=$(check_container_status "docker ps --format {{.Names}} | grep green")
+    green_status=$(check_container_status docker ps --format "{{.Names}}" | grep green | tr -d ' ')
     if [ "$green_status" = "healthy" ]; then
       break
     fi
@@ -79,5 +79,5 @@ else
   done
 
   echo "backend-green is now healthy. Stopping backend-blue..."
-  stop_container "docker ps --format {{.Names}} | grep blue"
+  stop_container "backend-blue"
 fi
