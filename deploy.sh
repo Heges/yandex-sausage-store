@@ -31,7 +31,7 @@ get_containers_by_pattern() {
 
 get_container_by_name() {
   local pattern=$1
-  docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "empty" | tr -d ' '
+  docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "sausage-store-backend-$pattern" | tr -d ' '
 }
 
 # Проверка состояния контейнеров backend-green
