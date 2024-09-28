@@ -23,6 +23,7 @@ services:
       retries: 6
   backend-green:
     image: $CI_REGISTRY_IMAGE/sausage-backend:$VERSION
+    container_name: backend-green
     environment:
       # Переменные из application.properties можно заменить переменными окружения
       VIRTUAL_HOST: "backend"
