@@ -48,12 +48,12 @@ echo $green_healthy
 
 if [ "$green_healthy" = true ]; then
   echo "At least one backend-green container is healthy. Deploying backend-blue..."
-  deploy_container "backend-blue"
+  deploy_container "docker ps --format {{.Names}} | grep blue"
 
   # Ждем, пока backend-blue станет healthy
 
   while true; do
-    blue_status=$(check_container_status "backend-blue")
+    blue_status=$(check_container_status "docker ps --format {{.Names}} | grep blue")
     if [ "$blue_status" = "healthy" ]; then
       break
     fi
@@ -70,7 +70,7 @@ else
   # Ждем, пока backend-green станет healthy
 
   while true; do
-    green_status=$(check_container_status "backend-green")
+    green_status=$(check_container_status "docker ps --format {{.Names}} | grep green")
     if [ "$green_status" = "healthy" ]; then
       break
     fi
@@ -79,5 +79,5 @@ else
   done
 
   echo "backend-green is now healthy. Stopping backend-blue..."
-  stop_container "backend-blue"
+  stop_container "docker ps --format {{.Names}} | grep blue"
 fi
