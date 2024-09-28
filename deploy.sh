@@ -26,17 +26,12 @@ stop_container() {
 
 get_containers_by_pattern() {
   local pattern=$1
-  docker --context remote ps --format "{{.Names}}" | grep "$pattern" | tr -d ' ' 
-}
-
-get_container_by_name() {
-  local pattern=$1
-  docker --context remote ps --format "{{.Names}}" | grep blue -A 1 || echo "sausage-store-backend-$pattern" | tr -d ' '
+  docker --context remote ps --format "{{.Names}}" | grep "$pattern" | tr -d ' '
 }
 
 # Проверка состояния контейнеров backend-green
 
-green_containers=$(get_containers_by_pattern "green")
+green_containers=$(get_containers_by_pattern "backend-green")
 green_healthy=false
 
 for container in $green_containers; do
@@ -51,16 +46,12 @@ echo $green_healthy
 
 if [ "$green_healthy" = true ]; then
   echo "At least one backend-green container is healthy. Deploying backend-blue..."
-  # bb=$(get_container_by_name "blue")
-  # echo "deploy blue $bb 1" 
-  # echo "deploy blue ${bb} 2" 
   deploy_container "backend-blue"
 
   # Ждем, пока backend-blue станет healthy
 
   while true; do
-	bb=$(get_container_by_name "blue")
-    blue_status=$bb
+    blue_status=$(check_container_status "backend-blue")
     if [ "$blue_status" = "healthy" ]; then
       break
     fi
@@ -69,17 +60,15 @@ if [ "$green_healthy" = true ]; then
   done
 
   echo "backend-blue is now healthy. Stopping backend-green..."
-  bg=$(get_container_by_name "green")
-  stop_container $bg
+  stop_container "backend-green"
 else
   echo "No backend-green container is healthy. Deploying backend-green first..."
-  bg=$(get_container_by_name "green")
-  deploy_container $bg
+  deploy_container "backend-green"
   
   # Ждем, пока backend-green станет healthy
 
   while true; do
-    green_status=$(check_container_status "green")
+    green_status=$(check_container_status "backend-green")
     if [ "$green_status" = "healthy" ]; then
       break
     fi
@@ -88,6 +77,5 @@ else
   done
 
   echo "backend-green is now healthy. Stopping backend-blue..."
-  bb=$(get_container_by_name "blue")
-  stop_container $bb
+  stop_container "backend-blue"
 fi
