@@ -51,10 +51,10 @@ echo $green_healthy
 
 if [ "$green_healthy" = true ]; then
   echo "At least one backend-green container is healthy. Deploying backend-blue..."
-  bb=$(get_container_by_name "blue")
-  echo "deploy blue $bb 1" 
-  echo "deploy blue ${bb} 2" 
-  deploy_container $bb
+  # bb=$(get_container_by_name "blue")
+  # echo "deploy blue $bb 1" 
+  # echo "deploy blue ${bb} 2" 
+  deploy_container "backend-blue"
 
   # Ждем, пока backend-blue станет healthy
 
