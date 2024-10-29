@@ -1,22 +1,17 @@
-# include:
-  # - template: Security/SAST.gitlab-ci.yml
- 
-variables:
-  # SAST_EXPERIMENTAL_STRING: "HELLO SAST"
-  VERSION: 1.0.${CI_PIPELINE_ID}
-  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
-  JAVA_OPTS: -XX:MaxRAMPercentage=90
- 
-stages:
+ stages:
   - build
   - test
   - release
 
-cache:
-  paths:
-    - ${CI_PROJECT_DIR}/.m2/repository
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  JAVA_OPTS: -XX:MaxRAMPercentage=90
 
-build-backend-code-job:
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+build-backend:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -34,10 +29,22 @@ build-backend-code-job:
       --build-arg VERSION=$VERSION
       --cache=true
 
-sonarqube-backend-sast:
+gitlab-sast-job:
   stage: test
   needs:
-    - build-backend-code-job
+    - build-backend
+  variables:
+    COMPILE: "true"
+    SAST_JAVA_VERSION: 16
+    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository      
+  trigger:
+    include:
+      - template: Security/SAST.gitlab-ci.yml
+
+sonarqube-sast-job:
+  stage: test
+  needs:
+    - build-backend
   image: maven:3.8-openjdk-16
   variables:
     SPRING_FLYWAY_ENABLED: "false"
@@ -47,19 +54,9 @@ sonarqube-backend-sast:
     - unset SPRING_DATASOURCE_URL
     - unset SPRING_DATASOURCE_USERNAME
     - unset SPRING_DATASOURCE_PASSWORD  
-    - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.projectName=$SONAR_KEY_BACKEND -e -X
+    - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY_BACK -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN_BACK -Dsonar.projectName=$SONAR_PROJECT_NAME_BACK -e -X
 
-gitlab-sast:
-  stage: test
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"
-  needs:
-    - build-backend-code-job
-  trigger:
-    include:
-      - template: Security/SAST.gitlab-ci.yml
-
-uupload-backend:
+upload-backend:
   stage: release
   variables:
     GIT_STRATEGY: none
