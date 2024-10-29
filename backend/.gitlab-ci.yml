@@ -55,7 +55,7 @@ sonarqube-sast-job:
     - unset SPRING_DATASOURCE_USERNAME
     - unset SPRING_DATASOURCE_PASSWORD  
     - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.projectName=$SONAR_KEY_BACKEND -e -X
-    
+
 upload-backend:
   stage: release
   variables:
@@ -67,4 +67,4 @@ upload-backend:
   before_script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA
