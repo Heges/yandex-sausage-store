@@ -1,6 +1,3 @@
-variables:
-  VERSION: "1.0.$CI_PIPELINE_ID"
-  
 stages:
   - build
   - test
@@ -8,9 +5,8 @@ stages:
   - deploy
   - notify
 
-cache:
-  paths:
-    - frontend/dist
+variables:
+  VERSION: "1.0.$CI_PIPELINE_ID"
 
 build-frontend-code-job:
   stage: build
@@ -18,13 +14,13 @@ build-frontend-code-job:
     name: gcr.io/kaniko-project/executor:v1.9.0-debug
     entrypoint: [""]
   script:
-    - echo "start build frontend"
+    - echo "Build frontend start"
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}/frontend"
       --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}/sausage-frontend:$CI_COMMIT_SHA"
       --build-arg VERSION=$VERSION
-      --cache=true
+      --cache=false
 
 
 sonarqube-frontend-sast:
