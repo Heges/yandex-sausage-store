@@ -12,16 +12,13 @@ import java.util.Objects;
 public class Report {
     @Id
     public String productId;
+    public String PEPE;
+    public String length;
+    public Boolean wasDelecious;
     public String name;
     public String quantity;
 
     public Report() {
-    }
-
-    public Report(String productId, String name, String quantity) {
-        this.productId = productId;
-        this.name = name;
-        this.quantity = quantity;
     }
 
     public String getProductId() {
@@ -30,6 +27,30 @@ public class Report {
 
     public void setProductId(String productId) {
         this.productId = productId;
+    }
+
+    public String getPEPE() {
+        return PEPE;
+    }
+
+    public void setPEPE(String PEPE) {
+        this.PEPE = PEPE;
+    }
+
+    public String getLength() {
+        return length;
+    }
+
+    public void setLength(String length) {
+        this.length = length;
+    }
+
+    public Boolean getWasDelecious() {
+        return wasDelecious;
+    }
+
+    public void setWasDelecious(Boolean wasDelecious) {
+        this.wasDelecious = wasDelecious;
     }
 
     public String getName() {
@@ -53,11 +74,11 @@ public class Report {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report report = (Report) o;
-        return Objects.equals(productId, report.productId) && Objects.equals(name, report.name) && Objects.equals(quantity, report.quantity);
+        return Objects.equals(productId, report.productId) && Objects.equals(PEPE, report.PEPE) && Objects.equals(length, report.length) && Objects.equals(wasDelecious, report.wasDelecious) && Objects.equals(name, report.name) && Objects.equals(quantity, report.quantity);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productId, name, quantity);
+        return Objects.hash(productId, PEPE, length, wasDelecious, name, quantity);
     }
 }
