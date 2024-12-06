@@ -1,1 +1,1 @@
-CREATE INDEX orders_status_date_idx ON orders(status, date_created);
+CREATE INDEX  if not exists orders_status_date_idx ON orders(status, date_created);

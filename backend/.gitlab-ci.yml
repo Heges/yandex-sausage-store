@@ -1,134 +1,70 @@
-# include:
-  # - template: Security/SAST.gitlab-ci.yml
- 
-variables:
-  # SAST_EXPERIMENTAL_STRING: "HELLO SAST"
-  VERSION: 1.0.${CI_PIPELINE_ID}
-  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
-  JAVA_OPTS: -XX:MaxRAMPercentage=90
- 
 stages:
   - build
   - test
   - release
-  - deploy
-  - notify
 
-cache:
-  paths:
-    - ${CI_PROJECT_DIR}/.m2/repository
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
+  MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+  JAVA_OPTS: -XX:MaxRAMPercentage=90
 
-build-backend-code-job:
-  # variables:
-    # VERSION: 1.0.${CI_PIPELINE_ID}
-    # MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+build-backend:
   stage: build
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"  
-  # only:
-    # changes:
-    # - backend/*/
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  before_script:
+    - env
   script:
-    - cd backend
-    - mkdir -p ${MAVEN_REPO_PATH}
-    - >
-      mvn package -Dmaven.repo.local=${MAVEN_REPO_PATH}
-      -Dversion.application=${VERSION}
-  # artifacts:
-    # paths:
-      # - backend/target/sausage-store-${VERSION}.jar
-      # - ${CI_PROJECT_DIR}/.m2/
+    - echo "Build Backend Start"
+    - env
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/backend"
+      --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/sausage-backend:$CI_COMMIT_SHA"
+      --build-arg VAULT_TOKEN=$VAULT_TOKEN
+      --build-arg VERSION=$VERSION
+      --cache=true
 
-sonarqube-backend-sast:
+gitlab-sast-job:
   stage: test
-  variables:
-    SPRING_FLYWAY_ENABLED: "false"
-  image: "maven:3.8-openjdk-16"
   needs:
-    - build-backend-code-job
-  script:
-    - cd backend
-    - >
-      mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
-      -Dsonar.projectKey=${SONAR_KEY_BACKEND}
-      -Dsonar.host.url=${SONARQUBE_URL}
-      -Dsonar.login=${SONAR_LOGIN}
-
-gitlab-sast:
-  stage: test
+    - build-backend
   variables:
-    SPRING_FLYWAY_ENABLED: "false"
-  needs:
-    - build-backend-code-job
+    COMPILE: "true"
+    SAST_JAVA_VERSION: 16
+    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository      
   trigger:
     include:
       - template: Security/SAST.gitlab-ci.yml
 
+sonarqube-sast-job:
+  stage: test
+  needs:
+    - build-backend
+  image: maven:3.8-openjdk-16
+  variables:
+    SPRING_FLYWAY_ENABLED: "false"
+    SPRING_CLOUD_VAULT_ENABLED: "false"
+  script:   
+    - cd backend 
+    - unset SPRING_DATASOURCE_URL
+    - unset SPRING_DATASOURCE_USERNAME
+    - unset SPRING_DATASOURCE_PASSWORD  
+    - mvn verify sonar:sonar -Dsonar.projectKey=$SONAR_KEY_BACKEND -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.projectName=$SONAR_KEY_BACKEND -e -X
+
 upload-backend:
   stage: release
-  needs:
-    - sonarqube-backend-sast
-    - gitlab-sast
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: [ ]
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd backend
-    - mvn deploy -DskipTests -Dmaven.repo.local=${MAVEN_REPO_PATH} -s settings.xml -Dversion.application=${VERSION}
-
-deploy-backend:
-    stage: deploy
-    before_script:
-      - echo "Проверяем агент"
-      - |
-        if [ ! -f /usr/bin/ssh-agent ]; then
-          apt-get update -y
-          apt-get install openssh-client -y
-        fi
-        eval $(ssh-agent -s)
-        echo "Добавляем ключ"
-        echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
-        echo "Выдаём права и настраиваем SSH"
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        echo "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-        ssh-keyscan -H ${DEV_HOST} >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-    script:
-      - sed "s/\${PSQL_HOST}/$PSQL_HOST/" ./backend/backend.service > ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_PORT}/$PSQL_PORT/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_DBNAME}/$PSQL_DBNAME/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_ADMIN}/$PSQL_ADMIN/" ./backend/backend.service.temp
-      - sed -i "s/\${PSQL_PASSWORD}/$PSQL_PASSWORD/" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_USER}/$MONGO_USER/" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_PASSWORD}/$MONGO_PASSWORD/" ./backend/backend.service.temp
-      #- sed -i "s|${MONGO_HOST}|$MONGO_HOST|" ./backend/backend.service.temp
-      - sed -i "s/\${MONGO_DATABASE}/$MONGO_DATABASE/" ./backend/backend.service.temp
-      - scp ./backend/backend.service.temp ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/backend.service
-      - ssh ${DEV_USER}@${DEV_HOST} "export DEV_USER=${DEV_USER}; export CURRENT_VERSION=${VERSION}; export VERSION=${VERSION}; export DEV_HOST=${DEV_HOST}; export NEXUS_REPO_URL=${NEXUS_REPO_URL}; export NEXUS_REPO_BACKEND_NAME=${NEXUS_REPO_BACKEND_NAME}; export NEXUS_REPO_USER=${NEXUS_REPO_USER}; export NEXUS_REPO_PASS=${NEXUS_REPO_PASS}; setsid /bin/bash -s" < ./backend/deploy.sh
-    environment:
-      name: review/$CI_COMMIT_REF_NAME
-      url: https://${DEV_HOST}
-      auto_stop_in: 1h
-    rules: 
-      - when: manual
-    needs:
-      - job: upload-backend
-    
-
-telegram-notification-backend:
-  stage: notify
-  script:
-    - |
-      if [[ "$CI_COMMIT_MESSAGE" == *"send notification"* ]]; then
-        message="Александр Гааг собрал Backend \nАртефакт доступен по [ссылке](${NEXUS_REPO_URL}/repository/${NEXUS_REPO_BACKEND_NAME}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar)"
-        curl -X POST -H 'Content-type: application/json' \
-        --data "{\"chat_id\": \"-1002138916913\", \"text\": \"$message\", \"parse_mode\": \"markdown\"}" \
-        https://api.telegram.org/bot5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs/sendMessage
-      fi
-  only:
-    variables:
-      - $CI_COMMIT_MESSAGE
-      - $CI_PIPELINE_SOURCE
-    # changes:
-      # - backend/*
-  needs:
-    - job: build-backend-code-job
+    - crane tag $CI_REGISTRY_IMAGE/sausage-backend:$CI_COMMIT_SHA $VERSION

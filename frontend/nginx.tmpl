@@ -1,0 +1,29 @@
+{{ range $host, $containers := groupBy $ "Env.VIRTUAL_HOST" }}
+    upstream {{ $host }} {
+
+{{ range $index, $value := $containers }}
+    {{ with $address := index $value.Addresses 0 }}
+    server {{ $value.Hostname }}:{{ $address.Port }};
+    {{ end }}
+{{ end }}
+
+}
+
+server {
+    listen 80;
+    server_name std-030-32.praktikum-services.tech;
+    server_tokens off;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://{{ $host }};
+    }
+}
+{{ end }}
+
+
